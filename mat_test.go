@@ -331,3 +331,41 @@ func TestMatrix_Row(t *testing.T) {
 		})
 	}
 }
+
+func TestMatrix_SetColumn(t *testing.T) {
+	tests := []struct {
+		m        *Matrix
+		j        int //column to change
+		values   map[int]int
+		expected *Matrix
+	}{
+		{Identity(3), 0, map[int]int{1: 1}, New(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.m.SetColumn(test.j, test.values)
+			if !test.m.Equals(test.expected) {
+				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.m)
+			}
+		})
+	}
+}
+
+func TestMatrix_SetRow(t *testing.T) {
+	tests := []struct {
+		m        *Matrix
+		i        int //row to change
+		values   map[int]int
+		expected *Matrix
+	}{
+		{Identity(3), 0, map[int]int{1: 1}, New(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.m.SetRow(test.i, test.values)
+			if !test.m.Equals(test.expected) {
+				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.m)
+			}
+		})
+	}
+}

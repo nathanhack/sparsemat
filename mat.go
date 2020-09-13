@@ -321,6 +321,27 @@ func (mat *Matrix) Column(j int) map[int]int {
 	return result
 }
 
+//SetColumn sets the values in column j. The values' keys are expected to be row indices.
+func (mat *Matrix) SetColumn(j int, values map[int]int) {
+	mat.checkColBounds(j)
+	c := j + mat.colStart
+
+	//first we'll zeroize
+	rs := mat.colValues[c]
+	for r := range rs {
+		mat.set(r, c, 0)
+	}
+
+	//now set the new values
+	for i, v := range values {
+		if i < 0 || mat.rows <= i {
+			panic("out of range")
+		}
+		r := i + mat.rowStart
+		mat.set(r, c, v)
+	}
+}
+
 //Row returns a map containing the non zero column indices as the keys and it's associated values.
 func (mat *Matrix) Row(i int) map[int]int {
 	mat.checkRowBounds(i)
@@ -333,6 +354,27 @@ func (mat *Matrix) Row(i int) map[int]int {
 		}
 	}
 	return result
+}
+
+//SetRow sets the values in row i. The values' keys are expected to be column indices.
+func (mat *Matrix) SetRow(i int, values map[int]int) {
+	mat.checkColBounds(i)
+	r := i + mat.colStart
+
+	//first we'll zeroize
+	cs := mat.rowValues[r]
+	for c := range cs {
+		mat.set(r, c, 0)
+	}
+
+	//now set the new values
+	for j, v := range values {
+		if j < 0 || mat.cols <= j {
+			panic("out of range")
+		}
+		c := j + mat.rowStart
+		mat.set(r, c, v)
+	}
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.
@@ -403,6 +445,7 @@ func (mat Matrix) String() string {
 	return buff.String()
 }
 
+//SetMatrix sets all the values of this matrix to be the same as the matrix a.
 func (mat *Matrix) SetMatrix(a *Matrix) {
 	if mat.rows != a.rows || mat.cols != a.cols {
 		panic(fmt.Sprintf("set matrix must have the same shape, expected (%v,%v) but a=(%v,%v)", mat.rows, mat.cols, a.rows, a.cols))
