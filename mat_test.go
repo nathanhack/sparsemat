@@ -84,7 +84,7 @@ func TestMatrix_Dim(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			rows, cols := test.m.Dim()
+			rows, cols := test.m.Dims()
 
 			if rows != test.expectedRows {
 				t.Fatalf("expected %v but found %v", test.expectedRows, rows)

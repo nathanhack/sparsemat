@@ -126,8 +126,8 @@ func (mat *Matrix) checkColBounds(j int) {
 	}
 }
 
-//Dim returns the dimensions of the matrix.
-func (mat *Matrix) Dim() (int, int) {
+//Dims returns the dimensions of the matrix.
+func (mat *Matrix) Dims() (int, int) {
 	return mat.rows, mat.cols
 }
 
@@ -245,9 +245,9 @@ func (mat *Matrix) Mul(a, b *Matrix) {
 	if a.cols != b.rows {
 		panic(fmt.Sprintf("multiply shape misalignment can't multiple (%v,%v)x(%v,%v)", a.rows, a.cols, b.rows, b.cols))
 	}
-	mRows, mCols := mat.Dim()
-	aRows, _ := a.Dim()
-	_, bCols := b.Dim()
+	mRows, mCols := mat.Dims()
+	aRows, _ := a.Dims()
+	_, bCols := b.Dims()
 
 	if mRows != aRows || mCols != bCols {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
