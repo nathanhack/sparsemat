@@ -20,9 +20,9 @@ func TestNew(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var m *Matrix
 			if test.data != nil {
-				m = New(test.rows, test.cols, test.data...)
+				m = NewMat(test.rows, test.cols, test.data...)
 			} else {
-				m = New(test.rows, test.cols)
+				m = NewMat(test.rows, test.cols)
 			}
 
 			for i := 0; i < len(test.expected); i++ {
@@ -53,9 +53,9 @@ func TestCopy(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var m1 *Matrix
 			if test.data != nil {
-				m1 = New(test.rows, test.cols, test.data...)
+				m1 = NewMat(test.rows, test.cols, test.data...)
 			} else {
-				m1 = New(test.rows, test.cols)
+				m1 = NewMat(test.rows, test.cols)
 			}
 
 			m := Copy(m1)
@@ -79,8 +79,8 @@ func TestMatrix_Dim(t *testing.T) {
 		expectedRows int
 		expectedCols int
 	}{
-		{New(5, 5), 5, 5},
-		{New(5, 5).Slice(1, 1, 4, 4), 4, 4},
+		{NewMat(5, 5), 5, 5},
+		{NewMat(5, 5).Slice(1, 1, 4, 4), 4, 4},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -101,9 +101,9 @@ func TestMatrix_Slice(t *testing.T) {
 		sliced   *Matrix
 		expected *Matrix
 	}{
-		{New(2, 2, 1, 0, 0, 1).Slice(0, 0, 2, 1), New(2, 1, 1, 0)},
-		{Identity(8).Slice(3, 0, 4, 4), New(4, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)},
-		{Identity(8).Slice(3, 0, 4, 4).T(), New(4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)},
+		{NewMat(2, 2, 1, 0, 0, 1).Slice(0, 0, 2, 1), NewMat(2, 1, 1, 0)},
+		{Identity(8).Slice(3, 0, 4, 4), NewMat(4, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)},
+		{Identity(8).Slice(3, 0, 4, 4).T(), NewMat(4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -126,8 +126,8 @@ func TestMatrix_Slice2(t *testing.T) {
 	slice.Set(1, 0, 1)
 	slice.Set(2, 0, 1)
 
-	expectedSlice := New(3, 3, 0, 0, 0, 1, 0, 0, 1, 0, 0)
-	expectedOriginal := New(5, 5, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)
+	expectedSlice := NewMat(3, 3, 0, 0, 0, 1, 0, 0, 1, 0, 0)
+	expectedOriginal := NewMat(5, 5, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)
 
 	if !slice.Equals(expectedSlice) {
 		t.Fatalf("expcted \n%v\n but found \n%v\n", expectedSlice, slice)
@@ -148,7 +148,7 @@ func TestMatrix_Equals(t *testing.T) {
 		{Identity(4), nil, false},
 		{nil, Identity(4), false},
 		{nil, nil, true},
-		{New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0).T(), New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), false},
+		{NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0).T(), NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), false},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -165,7 +165,7 @@ func TestIdentity(t *testing.T) {
 		ident    *Matrix
 		expected *Matrix
 	}{
-		{Identity(3), New(3, 3, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+		{Identity(3), NewMat(3, 3, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -199,13 +199,13 @@ func TestMatrix_Mul(t *testing.T) {
 	tests := []struct {
 		m1, m2, result, expected *Matrix
 	}{
-		{New(1, 4, 1, 0, 1, 0), New(4, 1, 1, 0, 1, 0), New(1, 1), New(1, 1, 0)},
-		{New(1, 4, 1, 0, 1, 0), New(4, 1, 1, 0, 0, 0), New(1, 1), New(1, 1, 1)},
-		{New(1, 4, 1, 1, 1, 1), New(4, 1, 1, 1, 1, 0), New(1, 1), New(1, 1, 1)},
-		{Identity(3), Identity(3), New(3, 3), Identity(3)},
-		{Identity(3), New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), New(3, 3), New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0)},
-		{New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), Identity(3), New(3, 3), New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0)},
-		{New(4, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1).T(), Identity(4), New(3, 4), New(4, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1).T()},
+		{NewMat(1, 4, 1, 0, 1, 0), NewMat(4, 1, 1, 0, 1, 0), NewMat(1, 1), NewMat(1, 1, 0)},
+		{NewMat(1, 4, 1, 0, 1, 0), NewMat(4, 1, 1, 0, 0, 0), NewMat(1, 1), NewMat(1, 1, 1)},
+		{NewMat(1, 4, 1, 1, 1, 1), NewMat(4, 1, 1, 1, 1, 0), NewMat(1, 1), NewMat(1, 1, 1)},
+		{Identity(3), Identity(3), NewMat(3, 3), Identity(3)},
+		{Identity(3), NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), NewMat(3, 3), NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0)},
+		{NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), Identity(3), NewMat(3, 3), NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0)},
+		{NewMat(4, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1).T(), Identity(4), NewMat(3, 4), NewMat(4, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1).T()},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -222,8 +222,8 @@ func TestMatrix_Zeroize(t *testing.T) {
 		original *Matrix
 		expected *Matrix
 	}{
-		{Identity(3), New(3, 3)},
-		{New(3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1), New(3, 3)},
+		{Identity(3), NewMat(3, 3)},
+		{NewMat(3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1), NewMat(3, 3)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -240,8 +240,8 @@ func TestMatrix_T(t *testing.T) {
 		original *Matrix
 		expected *Matrix
 	}{
-		{New(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), New(3, 3, 0, 0, 0, 1, 1, 0, 1, 1, 0)},
-		{New(4, 2, 0, 1, 0, 0, 0, 0, 1, 0), New(2, 4, 0, 0, 0, 1, 1, 0, 0, 0)},
+		{NewMat(3, 3, 0, 1, 1, 0, 1, 1, 0, 0, 0), NewMat(3, 3, 0, 0, 0, 1, 1, 0, 1, 1, 0)},
+		{NewMat(4, 2, 0, 1, 0, 0, 0, 0, 1, 0), NewMat(2, 4, 0, 0, 0, 1, 1, 0, 0, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -257,8 +257,8 @@ func TestMatrix_Add(t *testing.T) {
 		a, b, result *Matrix
 		expected     *Matrix
 	}{
-		{Identity(3), Identity(3), New(3, 3), New(3, 3)},
-		{Identity(3), New(3, 3), New(3, 3), Identity(3)},
+		{Identity(3), Identity(3), NewMat(3, 3), NewMat(3, 3)},
+		{Identity(3), NewMat(3, 3), NewMat(3, 3), Identity(3)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -274,28 +274,18 @@ func TestMatrix_Column(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		j        int //column
-		expected map[int]int
+		expected *Vector
 	}{
-		{Identity(3), 1, map[int]int{1: 1}},
-		{Identity(3), 0, map[int]int{0: 1}},
-		{New(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 0, map[int]int{1: 1}},
+		{Identity(3), 1, NewVec(3, 0, 1, 0)},
+		{Identity(3), 0, NewVec(3, 1, 0, 0)},
+		{NewMat(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 0, NewVec(2, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			actual := test.m.Column(test.j)
 
-			if len(actual) != len(test.expected) {
-				t.Fatalf("expected %v values found %v: %v", len(test.expected), len(actual), actual)
-			}
-
-			for row, v1 := range test.expected {
-				v2, ok := actual[row]
-				if !ok {
-					t.Fatalf("expected to find row %v", row)
-				}
-				if v1 != v2 {
-					t.Fatalf("expected value at row %v to be %v but found %v", row, v1, v2)
-				}
+			if !actual.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
 			}
 		})
 	}
@@ -305,28 +295,18 @@ func TestMatrix_Row(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		i        int //row index
-		expected map[int]int
+		expected *Vector
 	}{
-		{Identity(3), 1, map[int]int{1: 1}},
-		{Identity(3), 0, map[int]int{0: 1}},
-		{New(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 1, map[int]int{0: 1}},
+		{Identity(3), 1, NewVec(3, 0, 1, 0)},
+		{Identity(3), 0, NewVec(3, 1, 0, 0)},
+		{NewMat(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 1, NewVec(2, 1, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			actual := test.m.Row(test.i)
 
-			if len(actual) != len(test.expected) {
-				t.Fatalf("expected %v values found %v: %v", len(test.expected), len(actual), actual)
-			}
-
-			for col, v1 := range test.expected {
-				v2, ok := actual[col]
-				if !ok {
-					t.Fatalf("expected to find col %v", col)
-				}
-				if v1 != v2 {
-					t.Fatalf("expected value at col %v to be %v but found %v", col, v1, v2)
-				}
+			if !actual.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
 			}
 		})
 	}
@@ -336,14 +316,14 @@ func TestMatrix_SetColumn(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		j        int //column to change
-		values   map[int]int
+		vec      *Vector
 		expected *Matrix
 	}{
-		{Identity(3), 0, map[int]int{1: 1}, New(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
+		{Identity(3), 0, NewVec(3, 0, 1, 0), NewMat(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			test.m.SetColumn(test.j, test.values)
+			test.m.SetColumn(test.j, test.vec)
 			if !test.m.Equals(test.expected) {
 				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.m)
 			}
@@ -355,14 +335,14 @@ func TestMatrix_SetRow(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		i        int //row to change
-		values   map[int]int
+		vec      *Vector
 		expected *Matrix
 	}{
-		{Identity(3), 0, map[int]int{1: 1}, New(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
+		{Identity(3), 0, NewVec(3, 0, 1, 0), NewMat(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			test.m.SetRow(test.i, test.values)
+			test.m.SetRow(test.i, test.vec)
 			if !test.m.Equals(test.expected) {
 				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.m)
 			}

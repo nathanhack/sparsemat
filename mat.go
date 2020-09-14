@@ -17,11 +17,11 @@ type Matrix struct {
 
 }
 
-//New creates a new matrix with the specified number of rows and cols.
+//NewMat creates a new matrix with the specified number of rows and cols.
 // If values is empty, the matrix will be zeroized.
 // If values are not empty it must have rows*cols items.  The values are expected to
 // be 0's or 1's anything else may have unexpected behavior matrix's methods.
-func New(rows, cols int, values ...int) *Matrix {
+func NewMat(rows, cols int, values ...int) *Matrix {
 	if len(values) != 0 && len(values) != rows*cols {
 		panic(fmt.Sprintf("matrix data length (%v) to size mismatch expected %v", len(values), rows*cols))
 	}
@@ -45,6 +45,10 @@ func New(rows, cols int, values ...int) *Matrix {
 	}
 
 	return &mat
+}
+
+func NewMatFromVec(vec *Vector) *Matrix {
+	return Copy(vec.mat)
 }
 
 //Identity create an identity matrix (one's on the diagonal).
@@ -117,7 +121,6 @@ func (mat *Matrix) checkRowBounds(i int) {
 	if i < 0 || i >= mat.rows {
 		panic(fmt.Sprintf("%v out of range: [0-%v]", i, mat.rows-1))
 	}
-
 }
 
 func (mat *Matrix) checkColBounds(j int) {
@@ -239,20 +242,26 @@ func (mat *Matrix) Mul(a, b *Matrix) {
 	if a == nil || b == nil {
 		panic("multiply input was found to be nil")
 	}
+
 	if mat == a || mat == b {
 		panic("multiply self assignment not allowed")
 	}
+
 	if a.cols != b.rows {
-		panic(fmt.Sprintf("multiply shape misalignment can't multiple (%v,%v)x(%v,%v)", a.rows, a.cols, b.rows, b.cols))
+		panic(fmt.Sprintf("multiply shape misalignment can't multiply (%v,%v)x(%v,%v)", a.rows, a.cols, b.rows, b.cols))
 	}
+
 	mRows, mCols := mat.Dims()
 	aRows, _ := a.Dims()
 	_, bCols := b.Dims()
-
 	if mRows != aRows || mCols != bCols {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
 	}
 
+	mat.mul(a, b)
+}
+
+func (mat *Matrix) mul(a, b *Matrix) {
 	//first we need to clear mat
 	mat.Zeroize()
 
@@ -293,6 +302,10 @@ func (mat *Matrix) Add(a, b *Matrix) {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, a.cols))
 	}
 
+	mat.add(a, b)
+}
+
+func (mat *Matrix) add(a, b *Matrix) {
 	//first we need to clear mat
 	mat.SetMatrix(a)
 
@@ -308,22 +321,22 @@ func (mat *Matrix) Add(a, b *Matrix) {
 }
 
 //Column returns a map containing the non zero row indices as the keys and it's associated values.
-func (mat *Matrix) Column(j int) map[int]int {
+func (mat *Matrix) Column(j int) *Vector {
 	mat.checkColBounds(j)
-	col := j + mat.colStart
-	result := make(map[int]int)
 
-	for r, v := range mat.colValues[col] {
-		if mat.rowStart <= r && r < mat.rowStart+mat.rows {
-			result[r-mat.rowStart] = v
-		}
+	return &Vector{
+		mat: mat.Slice(0, j, mat.rows, 1).T(),
 	}
-	return result
 }
 
 //SetColumn sets the values in column j. The values' keys are expected to be row indices.
-func (mat *Matrix) SetColumn(j int, values map[int]int) {
+func (mat *Matrix) SetColumn(j int, vec *Vector) {
 	mat.checkColBounds(j)
+
+	if mat.rows != vec.Len() {
+		panic("matrix number of columns must equal length of vector")
+	}
+
 	c := j + mat.colStart
 
 	//first we'll zeroize
@@ -333,33 +346,30 @@ func (mat *Matrix) SetColumn(j int, values map[int]int) {
 	}
 
 	//now set the new values
-	for i, v := range values {
-		if i < 0 || mat.rows <= i {
-			panic("out of range")
-		}
+	for i, v := range vec.mat.rowValues[0] {
 		r := i + mat.rowStart
 		mat.set(r, c, v)
 	}
 }
 
 //Row returns a map containing the non zero column indices as the keys and it's associated values.
-func (mat *Matrix) Row(i int) map[int]int {
+func (mat *Matrix) Row(i int) *Vector {
 	mat.checkRowBounds(i)
-	row := i + mat.rowStart
-	result := make(map[int]int)
 
-	for c, v := range mat.rowValues[row] {
-		if mat.colStart <= c && c < mat.colStart+mat.cols {
-			result[c-mat.rowStart] = v
-		}
+	return &Vector{
+		mat: mat.Slice(i, 0, 1, mat.cols),
 	}
-	return result
 }
 
 //SetRow sets the values in row i. The values' keys are expected to be column indices.
-func (mat *Matrix) SetRow(i int, values map[int]int) {
+func (mat *Matrix) SetRow(i int, vec *Vector) {
 	mat.checkColBounds(i)
-	r := i + mat.colStart
+
+	if mat.cols != vec.Len() {
+		panic("matrix number of columns must equal length of vector")
+	}
+
+	r := i + mat.rowStart
 
 	//first we'll zeroize
 	cs := mat.rowValues[r]
@@ -368,11 +378,8 @@ func (mat *Matrix) SetRow(i int, values map[int]int) {
 	}
 
 	//now set the new values
-	for j, v := range values {
-		if j < 0 || mat.cols <= j {
-			panic("out of range")
-		}
-		c := j + mat.rowStart
+	for j, v := range vec.mat.rowValues[0] {
+		c := j + mat.colStart
 		mat.set(r, c, v)
 	}
 }
@@ -451,6 +458,10 @@ func (mat *Matrix) SetMatrix(a *Matrix) {
 		panic(fmt.Sprintf("set matrix must have the same shape, expected (%v,%v) but a=(%v,%v)", mat.rows, mat.cols, a.rows, a.cols))
 	}
 
+	mat.setMatrix(a)
+}
+
+func (mat *Matrix) setMatrix(a *Matrix) {
 	mat.Zeroize()
 
 	for r, cs := range a.rowValues {
