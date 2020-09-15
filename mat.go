@@ -219,20 +219,39 @@ func (mat *Matrix) T() *Matrix {
 	}
 }
 
-//Zeroize take the current matrix and zeroizes it sets all values to 0.
+//Zeroize take the current matrix sets all values to 0.
 func (mat *Matrix) Zeroize() {
-	for r, cs := range mat.rowValues {
-		i := r - mat.rowStart
-		if i >= 0 && i < mat.rows {
-			for c, v := range cs {
-				if v == 0 {
-					continue
-				}
-				j := c - mat.colStart
-				if j >= 0 && j < mat.cols {
-					mat.set(r, c, 0)
-				}
+	mat.zeroize(0, 0, mat.rows, mat.cols)
+}
+
+//ZeroizeRange take the current matrix sets values inside the range to zero.
+func (mat *Matrix) ZeroizeRange(i, j, rows, cols int) {
+	if i < 0 || j < 0 || rows < 0 || cols < 0 {
+		panic("zeroize must have positive values")
+	}
+	if mat.rows < i+rows || mat.cols < j+cols {
+		panic(fmt.Sprintf("zeroize bounds check failed can't zeroize shape (%v,%v) on a (%v,%v) matrix", i+rows, j+cols, mat.rows, mat.cols))
+	}
+
+	r := i + mat.rowStart
+	c := j + mat.colStart
+
+	mat.zeroize(r, c, rows, cols)
+}
+
+func (mat *Matrix) zeroize(r, c, rows, col int) {
+	for rv, cs := range mat.rowValues {
+		if rv < r || r+rows <= rv {
+			continue
+		}
+		for cv, v := range cs {
+			if v == 0 {
+				continue
 			}
+			if cv < c || c+col <= cv {
+				continue
+			}
+			mat.set(rv, cv, 0)
 		}
 	}
 }
@@ -263,7 +282,7 @@ func (mat *Matrix) Mul(a, b *Matrix) {
 
 func (mat *Matrix) mul(a, b *Matrix) {
 	//first we need to clear mat
-	mat.Zeroize()
+	mat.zeroize(0, 0, mat.rows, mat.cols)
 
 	for r, cs := range a.rowValues {
 		i := r - a.rowStart
@@ -466,7 +485,7 @@ func (mat *Matrix) SetMatrix(a *Matrix, iOffset, jOffset int) {
 }
 
 func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
-	mat.Zeroize()
+	mat.zeroize(rOffset, cOffset, a.rows, a.cols)
 
 	for r, cs := range a.rowValues {
 		i := r - a.rowStart

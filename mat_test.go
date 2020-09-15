@@ -360,6 +360,7 @@ func TestMatrix_SetMatrix(t *testing.T) {
 		{NewMat(3, 3), Identity(3), 0, 0, Identity(3)},
 		{NewMat(4, 4), NewMat(2, 2, 1, 1, 1, 1), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0)},
 		{NewMat(4, 4), NewMat(2, 2, 0, 1, 0, 0).T(), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)},
+		{Identity(4), NewMat(2, 2, 1, 1, 1, 1), 1, 1, NewMat(4, 4, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
