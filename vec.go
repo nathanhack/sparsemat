@@ -2,8 +2,9 @@ package mat
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 type Vector struct {
@@ -203,6 +204,24 @@ func (tvec *TransposedVector) MulVec(a *Matrix, b *TransposedVector) {
 	}
 
 	tvec.mat.mul(a, b.mat)
+}
+
+func (tvec *TransposedVector) Add(a, b *TransposedVector) {
+	if a == nil || b == nil {
+		panic("addition input was found to be nil")
+	}
+	if tvec == a || tvec == b {
+		panic("addition self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic("adding transposed vectors must have the same length")
+	}
+	if tvec.Len() != a.Len() {
+		panic("adding transposed vectors, destination must have the same length")
+	}
+
+	tvec.mat.add(a.mat, b.mat)
 }
 
 //At returns the value at index i.

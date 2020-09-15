@@ -134,3 +134,20 @@ func TestTransposedVector_MulVec(t *testing.T) {
 		})
 	}
 }
+
+func TestTransposedVector_Add(t *testing.T) {
+	tests := []struct {
+		a, b, result *TransposedVector
+		expected     *TransposedVector
+	}{
+		{NewTVec(3, 0, 1, 0), NewTVec(3, 1, 0, 0), NewTVec(3), NewTVec(3, 1, 1, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.Add(test.a, test.b)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
