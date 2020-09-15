@@ -365,7 +365,7 @@ func (mat *Matrix) SetColumn(j int, vec *TransposedVector) {
 	}
 
 	//now set the new values
-	for i, v := range vec.mat.colValues[0] {
+	for i, v := range vec.mat.colValues[vec.mat.colStart] {
 		r := i + mat.rowStart
 		mat.set(r, c, v)
 	}
@@ -397,7 +397,7 @@ func (mat *Matrix) SetRow(i int, vec *Vector) {
 	}
 
 	//now set the new values
-	for j, v := range vec.mat.rowValues[0] {
+	for j, v := range vec.mat.rowValues[vec.mat.rowStart] {
 		c := j + mat.colStart
 		mat.set(r, c, v)
 	}

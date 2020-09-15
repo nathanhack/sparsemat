@@ -320,6 +320,7 @@ func TestMatrix_SetColumn(t *testing.T) {
 		expected *Matrix
 	}{
 		{Identity(3), 0, NewTVec(3, 0, 1, 0), NewMat(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
+		{Identity(3), 1, Identity(3).Column(2), NewMat(3, 3, 1, 0, 0, 0, 0, 0, 0, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -339,6 +340,7 @@ func TestMatrix_SetRow(t *testing.T) {
 		expected *Matrix
 	}{
 		{Identity(3), 0, NewVec(3, 0, 1, 0), NewMat(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
+		{Identity(3), 1, Identity(3).Row(2), NewMat(3, 3, 1, 0, 0, 0, 0, 1, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
