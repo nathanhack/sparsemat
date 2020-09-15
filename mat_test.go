@@ -274,11 +274,11 @@ func TestMatrix_Column(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		j        int //column
-		expected *Vector
+		expected *TransposedVector
 	}{
-		{Identity(3), 1, NewVec(3, 0, 1, 0)},
-		{Identity(3), 0, NewVec(3, 1, 0, 0)},
-		{NewMat(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 0, NewVec(2, 0, 1)},
+		{Identity(3), 1, NewTVec(3, 0, 1, 0)},
+		{Identity(3), 0, NewTVec(3, 1, 0, 0)},
+		{NewMat(4, 4, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0).Slice(1, 1, 2, 2).T(), 0, NewTVec(2, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -316,10 +316,10 @@ func TestMatrix_SetColumn(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
 		j        int //column to change
-		vec      *Vector
+		vec      *TransposedVector
 		expected *Matrix
 	}{
-		{Identity(3), 0, NewVec(3, 0, 1, 0), NewMat(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
+		{Identity(3), 0, NewTVec(3, 0, 1, 0), NewMat(3, 3, 0, 0, 0, 1, 1, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -345,6 +345,27 @@ func TestMatrix_SetRow(t *testing.T) {
 			test.m.SetRow(test.i, test.vec)
 			if !test.m.Equals(test.expected) {
 				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.m)
+			}
+		})
+	}
+}
+
+func TestMatrix_SetMatrix(t *testing.T) {
+	tests := []struct {
+		dest             *Matrix
+		source           *Matrix
+		iOffset, jOffset int
+		expected         *Matrix
+	}{
+		{NewMat(3, 3), Identity(3), 0, 0, Identity(3)},
+		{NewMat(4, 4), NewMat(2, 2, 1, 1, 1, 1), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0)},
+		{NewMat(4, 4), NewMat(2, 2, 0, 1, 0, 0).T(), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.dest.SetMatrix(test.source, test.iOffset, test.jOffset)
+			if !test.dest.Equals(test.expected) {
+				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.dest)
 			}
 		})
 	}

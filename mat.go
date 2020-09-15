@@ -307,7 +307,7 @@ func (mat *Matrix) Add(a, b *Matrix) {
 
 func (mat *Matrix) add(a, b *Matrix) {
 	//first we need to clear mat
-	mat.SetMatrix(a)
+	mat.setMatrix(a, 0, 0)
 
 	for r, cs := range b.rowValues {
 		i := r - b.rowStart
@@ -321,16 +321,16 @@ func (mat *Matrix) add(a, b *Matrix) {
 }
 
 //Column returns a map containing the non zero row indices as the keys and it's associated values.
-func (mat *Matrix) Column(j int) *Vector {
+func (mat *Matrix) Column(j int) *TransposedVector {
 	mat.checkColBounds(j)
 
-	return &Vector{
-		mat: mat.Slice(0, j, mat.rows, 1).T(),
+	return &TransposedVector{
+		mat: mat.Slice(0, j, mat.rows, 1),
 	}
 }
 
 //SetColumn sets the values in column j. The values' keys are expected to be row indices.
-func (mat *Matrix) SetColumn(j int, vec *Vector) {
+func (mat *Matrix) SetColumn(j int, vec *TransposedVector) {
 	mat.checkColBounds(j)
 
 	if mat.rows != vec.Len() {
@@ -346,7 +346,7 @@ func (mat *Matrix) SetColumn(j int, vec *Vector) {
 	}
 
 	//now set the new values
-	for i, v := range vec.mat.rowValues[0] {
+	for i, v := range vec.mat.colValues[0] {
 		r := i + mat.rowStart
 		mat.set(r, c, v)
 	}
@@ -452,24 +452,28 @@ func (mat Matrix) String() string {
 	return buff.String()
 }
 
-//SetMatrix sets all the values of this matrix to be the same as the matrix a.
-func (mat *Matrix) SetMatrix(a *Matrix) {
-	if mat.rows != a.rows || mat.cols != a.cols {
-		panic(fmt.Sprintf("set matrix must have the same shape, expected (%v,%v) but a=(%v,%v)", mat.rows, mat.cols, a.rows, a.cols))
+//SetMatrix replaces the values of this matrix with the values of from matrix a. The shape of 'a' must be less than or equal mat.
+// If the 'a' shape is less then iOffset and jOffset can be used to place 'a' matrix in a specific location.
+func (mat *Matrix) SetMatrix(a *Matrix, iOffset, jOffset int) {
+	if iOffset < 0 || jOffset < 0 {
+		panic("offsets must be positive values [0,+)")
+	}
+	if mat.rows < iOffset+a.rows || mat.cols < jOffset+a.cols {
+		panic(fmt.Sprintf("set matrix have equal or smaller shape (%v,%v), found a=(%v,%v)", mat.rows, mat.cols, iOffset+a.rows, jOffset+a.cols))
 	}
 
-	mat.setMatrix(a)
+	mat.setMatrix(a, iOffset, jOffset)
 }
 
-func (mat *Matrix) setMatrix(a *Matrix) {
+func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
 	mat.Zeroize()
 
 	for r, cs := range a.rowValues {
 		i := r - a.rowStart
-		mr := i + mat.rowStart
+		mr := i + mat.rowStart + rOffset
 		for c, v := range cs {
 			j := c - a.colStart
-			mc := j + mat.colStart
+			mc := j + mat.colStart + cOffset
 			mat.set(mr, mc, v)
 		}
 	}
