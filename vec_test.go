@@ -104,6 +104,7 @@ func TestVector_NonzeroValues(t *testing.T) {
 		expected map[int]int
 	}{
 		{Identity(4).Row(2), map[int]int{2: 1}},
+		{NewMat(4, 6, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1).Row(0), map[int]int{0: 1, 1: 1, 3: 1}},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

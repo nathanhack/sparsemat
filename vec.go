@@ -96,15 +96,12 @@ func (vec *Vector) Dot(a *Vector) int {
 
 func (vec *Vector) NonzeroValues() (indexToValues map[int]int) {
 	indexToValues = make(map[int]int)
-	for k, v := range vec.mat.rowValues[vec.mat.rowStart] {
-		indexToValues[k] = v
-	}
 	end := vec.mat.colStart + vec.mat.cols
-	for r, v := range vec.mat.colValues[vec.mat.rowStart] {
-		if r < vec.mat.colStart || end <= r {
+	for c, v := range vec.mat.rowValues[vec.mat.rowStart] {
+		if c < vec.mat.colStart || end <= c {
 			continue
 		}
-		indexToValues[r] = v
+		indexToValues[c] = v
 	}
 	return
 }
