@@ -94,6 +94,21 @@ func (vec *Vector) Dot(a *Vector) int {
 	return m.at(0, 0)
 }
 
+func (vec *Vector) NonzeroValues() (indexToValues map[int]int) {
+	indexToValues = make(map[int]int)
+	for k, v := range vec.mat.rowValues[vec.mat.rowStart] {
+		indexToValues[k] = v
+	}
+	end := vec.mat.colStart + vec.mat.cols
+	for r, v := range vec.mat.colValues[vec.mat.rowStart] {
+		if r < vec.mat.colStart || end <= r {
+			continue
+		}
+		indexToValues[r] = v
+	}
+	return
+}
+
 func (vec *Vector) T() *TransposedVector {
 	return &TransposedVector{
 		mat: vec.mat.T(),
@@ -249,6 +264,18 @@ func (tvec *TransposedVector) set(i, value int) {
 
 func (tvec *TransposedVector) Equals(v *TransposedVector) bool {
 	return tvec.mat.Equals(v.mat)
+}
+
+func (tvec *TransposedVector) NonzeroValues() (indexToValues map[int]int) {
+	indexToValues = make(map[int]int)
+	end := tvec.mat.rowStart + tvec.mat.rows
+	for r, v := range tvec.mat.colValues[tvec.mat.colStart] {
+		if r < tvec.mat.rowStart || end <= r {
+			continue
+		}
+		indexToValues[r] = v
+	}
+	return
 }
 
 func (tvec *TransposedVector) String() string {

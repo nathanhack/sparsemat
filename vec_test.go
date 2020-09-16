@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"reflect"
 	"strconv"
 	"testing"
 )
@@ -97,6 +98,23 @@ func TestVector_Set(t *testing.T) {
 	}
 }
 
+func TestVector_NonzeroValues(t *testing.T) {
+	tests := []struct {
+		input    *Vector
+		expected map[int]int
+	}{
+		{Identity(4).Row(2), map[int]int{2: 1}},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			actual := test.input.NonzeroValues()
+			if !reflect.DeepEqual(actual, test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
+			}
+		})
+	}
+}
+
 func TestTransposedVector_Set(t *testing.T) {
 	tests := []struct {
 		source, result *TransposedVector
@@ -147,6 +165,23 @@ func TestTransposedVector_Add(t *testing.T) {
 			test.result.Add(test.a, test.b)
 			if !test.result.Equals(test.expected) {
 				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestTransposedVector_NonzeroValues(t *testing.T) {
+	tests := []struct {
+		input    *TransposedVector
+		expected map[int]int
+	}{
+		{Identity(4).Column(2), map[int]int{2: 1}},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			actual := test.input.NonzeroValues()
+			if !reflect.DeepEqual(actual, test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
 			}
 		})
 	}
