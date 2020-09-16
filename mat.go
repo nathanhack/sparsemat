@@ -221,7 +221,7 @@ func (mat *Matrix) T() *Matrix {
 
 //Zeroize take the current matrix sets all values to 0.
 func (mat *Matrix) Zeroize() {
-	mat.zeroize(0, 0, mat.rows, mat.cols)
+	mat.zeroize(mat.rowStart, mat.colStart, mat.rows, mat.cols)
 }
 
 //ZeroizeRange take the current matrix sets values inside the range to zero.

@@ -84,6 +84,7 @@ func TestVector_Set(t *testing.T) {
 		source, result *Vector
 	}{
 		{NewVec(5, 1, 0, 1, 0, 1), NewVec(5)},
+		{Identity(5).Row(2), NewVec(5)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

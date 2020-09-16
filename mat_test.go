@@ -122,7 +122,6 @@ func TestMatrix_Slice2(t *testing.T) {
 	slice := orignal.Slice(1, 1, 3, 3).T()
 
 	slice.Zeroize()
-
 	slice.Set(1, 0, 1)
 	slice.Set(2, 0, 1)
 
@@ -228,6 +227,24 @@ func TestMatrix_Zeroize(t *testing.T) {
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			test.original.Zeroize()
+			if !test.original.Equals(test.expected) {
+				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.original)
+			}
+		})
+	}
+}
+
+func TestMatrix_ZeroizeRange(t *testing.T) {
+	tests := []struct {
+		original         *Matrix
+		i, j, rows, cols int
+		expected         *Matrix
+	}{
+		{NewMat(4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), 1, 1, 2, 2, NewMat(4, 4, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.original.ZeroizeRange(test.i, test.j, test.rows, test.cols)
 			if !test.original.Equals(test.expected) {
 				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.original)
 			}

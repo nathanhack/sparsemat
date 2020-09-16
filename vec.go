@@ -69,7 +69,7 @@ func (vec *Vector) At(i int) int {
 }
 
 func (vec *Vector) at(j int) int {
-	return vec.mat.rowValues[0][j]
+	return vec.mat.rowValues[vec.mat.rowStart][j]
 }
 
 //Set sets the value at row index i and column index j to value.
@@ -244,7 +244,7 @@ func (tvec *TransposedVector) At(j int) int {
 }
 
 func (tvec *TransposedVector) at(i int) int {
-	return tvec.mat.rowValues[i][0]
+	return tvec.mat.rowValues[i][tvec.mat.colStart]
 }
 
 //Set sets the value at row index i and column index j to value.
