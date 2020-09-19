@@ -112,6 +112,21 @@ func (vec *Vector) T() *TransposedVector {
 	}
 }
 
+//Slice creates a slice of the Vector.  The slice will be connected to the original Vector, changes to one
+// causes changes in the other.
+func (vec *Vector) Slice(i, len int) *Vector {
+	if len <= 0 {
+		panic("slice len must >0")
+	}
+
+	vec.checkBounds(i)
+	j := i + vec.offset()
+
+	return &Vector{
+		mat: vec.mat.Slice(0, j, 1, len),
+	}
+}
+
 func (vec *Vector) Add(a, b *Vector) {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
@@ -253,6 +268,21 @@ func (tvec *TransposedVector) Set(j, value int) {
 	i := j + tvec.offset()
 
 	tvec.set(i, value)
+}
+
+//Slice creates a slice of the TransposedVector.  The slice will be connected to the original TransposedVector, changes to one
+// causes changes in the other.
+func (tvec *TransposedVector) Slice(j, len int) *TransposedVector {
+	if len <= 0 {
+		panic("slice len must >0")
+	}
+
+	tvec.checkBounds(j)
+	i := j + tvec.offset()
+
+	return &TransposedVector{
+		mat: tvec.mat.Slice(i, 0, len, 1),
+	}
 }
 
 func (tvec *TransposedVector) set(i, value int) {

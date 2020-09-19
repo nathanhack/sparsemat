@@ -89,8 +89,8 @@ func Copy(m *Matrix) *Matrix {
 	return &mat
 }
 
-//Slice creates a slice of the matrix.  The slice will be connected to the original matrix, changes work to one
-// causes changes in the other
+//Slice creates a slice of the matrix.  The slice will be connected to the original matrix, changes to one
+// causes changes in the other.
 func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
 	if rows <= 0 || cols <= 0 {
 		panic("slice rows and cols must >= 1")
@@ -326,7 +326,7 @@ func (mat *Matrix) Add(a, b *Matrix) {
 
 func (mat *Matrix) add(a, b *Matrix) {
 	//first we need to clear mat
-	mat.setMatrix(a, 0, 0)
+	mat.setMatrix(a, mat.rowStart, mat.colStart)
 
 	for r, cs := range b.rowValues {
 		i := r - b.rowStart
@@ -481,7 +481,7 @@ func (mat *Matrix) SetMatrix(a *Matrix, iOffset, jOffset int) {
 		panic(fmt.Sprintf("set matrix have equal or smaller shape (%v,%v), found a=(%v,%v)", mat.rows, mat.cols, iOffset+a.rows, jOffset+a.cols))
 	}
 
-	mat.setMatrix(a, iOffset, jOffset)
+	mat.setMatrix(a, iOffset+mat.rowStart, jOffset+mat.colStart)
 }
 
 func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
@@ -489,10 +489,10 @@ func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
 
 	for r, cs := range a.rowValues {
 		i := r - a.rowStart
-		mr := i + mat.rowStart + rOffset
+		mr := i + rOffset
 		for c, v := range cs {
 			j := c - a.colStart
-			mc := j + mat.colStart + cOffset
+			mc := j + cOffset
 			mat.set(mr, mc, v)
 		}
 	}

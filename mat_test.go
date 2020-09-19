@@ -287,6 +287,37 @@ func TestMatrix_Add(t *testing.T) {
 	}
 }
 
+func TestMatrix_Add2(t *testing.T) {
+	tests := []struct {
+		original         *Matrix
+		i, j, rows, cols int
+		addToSlice       *Matrix
+		expectedOriginal *Matrix
+		expectedSlice    *Matrix
+	}{
+		{
+			NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+			1, 1, 3, 3,
+			Identity(3),
+			NewMat(5, 5, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1),
+			NewMat(3, 3, 0, 1, 1, 1, 0, 1, 1, 1, 0),
+		},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			sl := test.original.Slice(test.i, test.j, test.rows, test.cols)
+			c := Copy(sl)
+			sl.Add(c, test.addToSlice)
+			if !sl.Equals(test.expectedSlice) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedSlice, sl)
+			}
+			if !test.original.Equals(test.expectedOriginal) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
+			}
+		})
+	}
+}
+
 func TestMatrix_Column(t *testing.T) {
 	tests := []struct {
 		m        *Matrix
@@ -380,12 +411,43 @@ func TestMatrix_SetMatrix(t *testing.T) {
 		{NewMat(4, 4), NewMat(2, 2, 1, 1, 1, 1), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0)},
 		{NewMat(4, 4), NewMat(2, 2, 0, 1, 0, 0).T(), 1, 1, NewMat(4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)},
 		{Identity(4), NewMat(2, 2, 1, 1, 1, 1), 1, 1, NewMat(4, 4, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1)},
+		{NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), Identity(3), 1, 1, NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			test.dest.SetMatrix(test.source, test.iOffset, test.jOffset)
 			if !test.dest.Equals(test.expected) {
 				t.Fatalf("expcted \n%v\n but found \n%v\n", test.expected, test.dest)
+			}
+		})
+	}
+}
+
+func TestMatrix_SetMatrix2(t *testing.T) {
+	tests := []struct {
+		original         *Matrix
+		i, j, rows, cols int
+		source           *Matrix
+		iOffset, jOffset int
+		expectedOriginal *Matrix
+		expectedSlice    *Matrix
+	}{
+		{NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+			1, 1, 3, 3,
+			Identity(2),
+			1, 1,
+			NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1),
+			NewMat(3, 3, 1, 1, 1, 1, 1, 0, 1, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			sl := test.original.Slice(test.i, test.j, test.rows, test.cols)
+			sl.SetMatrix(test.source, test.iOffset, test.jOffset)
+			if !sl.Equals(test.expectedSlice) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedSlice, sl)
+			}
+			if !test.original.Equals(test.expectedOriginal) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
 			}
 		})
 	}
