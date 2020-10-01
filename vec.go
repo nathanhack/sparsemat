@@ -84,6 +84,11 @@ func (vec *Vector) set(j, value int) {
 	vec.mat.set(0, j, value)
 }
 
+//SetVec replaces the values of this vector with the values of from vector a.
+func (vec *Vector) SetVec(a *Vector, i int) {
+	vec.mat.setMatrix(a.mat, vec.mat.rowStart, i+vec.mat.colStart)
+}
+
 func (vec *Vector) Len() int {
 	return vec.mat.cols
 }
@@ -268,6 +273,11 @@ func (tvec *TransposedVector) Set(j, value int) {
 	i := j + tvec.offset()
 
 	tvec.set(i, value)
+}
+
+//SetVec replaces the values of this vector with the values of from vector a.
+func (tvec *TransposedVector) SetVec(a *TransposedVector, j int) {
+	tvec.mat.setMatrix(a.mat, j+tvec.mat.rowStart, tvec.mat.colStart)
 }
 
 //Slice creates a slice of the TransposedVector.  The slice will be connected to the original TransposedVector, changes to one
