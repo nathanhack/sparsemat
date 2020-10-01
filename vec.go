@@ -128,7 +128,7 @@ func (vec *Vector) Slice(i, len int) *Vector {
 	j := i + vec.offset()
 
 	return &Vector{
-		mat: vec.mat.Slice(0, j, 1, len),
+		mat: vec.mat.slice(0, j, 1, len),
 	}
 }
 
@@ -291,7 +291,7 @@ func (tvec *TransposedVector) Slice(j, len int) *TransposedVector {
 	i := j + tvec.offset()
 
 	return &TransposedVector{
-		mat: tvec.mat.Slice(i, 0, len, 1),
+		mat: tvec.mat.slice(i, 0, len, 1),
 	}
 }
 

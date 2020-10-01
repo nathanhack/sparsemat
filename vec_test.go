@@ -161,6 +161,27 @@ func TestVector_Slice(t *testing.T) {
 	}
 }
 
+func TestVector_Slice2(t *testing.T) {
+	tests := []struct {
+		original      *Vector
+		i1, len1      int
+		i2, len2      int
+		expectedSlice *Vector
+	}{
+		{NewVec(7, 0, 0, 1, 0, 1, 0, 0), 1, 5, 1, 3, NewVec(3, 1, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			sl := test.original.Slice(test.i1, test.len1).Slice(test.i2, test.len2)
+
+			if !sl.Equals(test.expectedSlice) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedSlice, sl)
+			}
+
+		})
+	}
+}
+
 func TestTransposedVector_Set(t *testing.T) {
 	tests := []struct {
 		source, result *TransposedVector
@@ -253,6 +274,27 @@ func TestTransposedVector_Slice(t *testing.T) {
 			if !test.original.Equals(test.expectedOriginal) {
 				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
 			}
+		})
+	}
+}
+
+func TestTransposedVector_Slice2(t *testing.T) {
+	tests := []struct {
+		original      *TransposedVector
+		i1, len1      int
+		i2, len2      int
+		expectedSlice *TransposedVector
+	}{
+		{NewTVec(7, 0, 0, 1, 0, 1, 0, 0), 1, 5, 1, 3, NewTVec(3, 1, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			sl := test.original.Slice(test.i1, test.len1).Slice(test.i2, test.len2)
+
+			if !sl.Equals(test.expectedSlice) {
+				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedSlice, sl)
+			}
+
 		})
 	}
 }

@@ -107,6 +107,10 @@ func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
 	mat.checkRowBounds(i + rows - 1)
 	mat.checkColBounds(j + cols - 1)
 
+	return mat.slice(r, c, rows, cols)
+}
+
+func (mat *Matrix) slice(r, c, rows, cols int) *Matrix {
 	return &Matrix{
 		rowValues: mat.rowValues,
 		rows:      rows,
