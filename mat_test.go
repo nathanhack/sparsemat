@@ -454,7 +454,7 @@ func TestMatrix_SetMatrix2(t *testing.T) {
 	}
 }
 
-func TestJson(t *testing.T) {
+func TestMatrix_JSON(t *testing.T) {
 	m := Identity(3)
 
 	bs, err := json.Marshal(m)

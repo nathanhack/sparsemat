@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"testing"
@@ -316,5 +317,41 @@ func TestTransposedVector_SetVec(t *testing.T) {
 				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
 			}
 		})
+	}
+}
+
+func TestVector_JSON(t *testing.T) {
+	v := NewVec(5, 1, 0, 1, 0, 1)
+
+	bs, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+
+	var actual Vector
+	err = json.Unmarshal(bs, &actual)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+	if !v.Equals(&actual) {
+		t.Fatalf("expected %v but found %v", v, actual)
+	}
+}
+
+func TestTransposedVector_JSON(t *testing.T) {
+	v := NewTVec(5, 1, 0, 1, 0, 1)
+
+	bs, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+
+	var actual TransposedVector
+	err = json.Unmarshal(bs, &actual)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+	if !v.Equals(&actual) {
+		t.Fatalf("expected %v but found %v", v, actual)
 	}
 }

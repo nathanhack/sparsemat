@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,26 @@ import (
 
 type Vector struct {
 	mat *Matrix
+}
+
+type vector struct {
+	Mat *Matrix
+}
+
+func (vec *Vector) MarshalJSON() ([]byte, error) {
+	return json.Marshal(vector{
+		Mat: vec.mat,
+	})
+}
+
+func (vec *Vector) UnmarshalJSON(bytes []byte) error {
+	var v vector
+	err := json.Unmarshal(bytes, &v)
+	if err != nil {
+		return err
+	}
+	vec.mat = v.Mat
+	return nil
 }
 
 func NewVec(length int, values ...int) *Vector {
@@ -177,6 +198,26 @@ func (vec *Vector) Mul(vec2 *Vector, mat *Matrix) {
 
 type TransposedVector struct {
 	mat *Matrix
+}
+
+type transposedVector struct {
+	Mat *Matrix
+}
+
+func (tvec *TransposedVector) MarshalJSON() ([]byte, error) {
+	return json.Marshal(transposedVector{
+		Mat: tvec.mat,
+	})
+}
+
+func (tvec *TransposedVector) UnmarshalJSON(bytes []byte) error {
+	var v transposedVector
+	err := json.Unmarshal(bytes, &v)
+	if err != nil {
+		return err
+	}
+	tvec.mat = v.Mat
+	return nil
 }
 
 func NewTVec(length int, values ...int) *TransposedVector {
