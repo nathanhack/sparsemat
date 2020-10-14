@@ -137,6 +137,19 @@ func TestMatrix_Slice2(t *testing.T) {
 	}
 }
 
+func TestMatrix_Slice3(t *testing.T) {
+	x := NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+	y := NewMat(2, 2, 1, 0, 0, 0)
+	result := x.Slice(1, 1, 2, 2)
+	s := NewMat(2, 2, 1, 1, 1, 1)
+	result.Mul(y, s)
+	expected := NewMat(5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+
+	if !expected.Equals(x) {
+		t.Fatalf("expected %v but found %v", expected, x)
+	}
+}
+
 func TestMatrix_Equals(t *testing.T) {
 	tests := []struct {
 		input1, input2 *Matrix
@@ -469,5 +482,74 @@ func TestMatrix_JSON(t *testing.T) {
 	}
 	if !m.Equals(&actual) {
 		t.Fatalf("expected %v but found %v", m, actual)
+	}
+}
+
+func TestMatrix_And(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Matrix
+	}{
+		{NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2), NewMat(2, 2, 0, 0, 0, 1)},
+		{NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2), NewMat(2, 2, 0, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.And(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestMatrix_Or(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Matrix
+	}{
+		{NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2), NewMat(2, 2, 0, 1, 1, 1)},
+		{NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2), NewMat(2, 2, 0, 1, 1, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.Or(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestMatrix_XOr(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Matrix
+	}{
+		{NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2), NewMat(2, 2, 0, 1, 1, 0)},
+		{NewMat(2, 2, 0, 0, 1, 1), NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2), NewMat(2, 2, 0, 1, 1, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.XOr(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestMatrix_Negate(t *testing.T) {
+	tests := []struct {
+		x, expected *Matrix
+	}{
+		{NewMat(2, 2, 0, 1, 0, 1), NewMat(2, 2, 1, 0, 1, 0)},
+		{NewMat(2, 2, 0, 1, 1, 0), NewMat(2, 2, 1, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.x.Negate()
+
+			if !test.x.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.x)
+			}
+		})
 	}
 }

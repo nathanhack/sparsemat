@@ -323,12 +323,18 @@ func (mat *Matrix) Mul(a, b *Matrix) {
 
 func (mat *Matrix) mul(a, b *Matrix) {
 	//first we need to clear mat
-	mat.zeroize(0, 0, mat.rows, mat.cols)
+	mat.zeroize(mat.rowStart, mat.colStart, mat.rows, mat.cols)
 
 	for r, cs := range a.rowValues {
+		if r < a.rowStart || a.rowStart+a.rows <= r {
+			continue
+		}
 		i := r - a.rowStart
 
 		for c, rs := range b.colValues {
+			if c < b.colStart || b.colStart+b.cols <= c {
+				continue
+			}
 			j := c - b.colStart
 			value := 0
 			for ics, v1 := range cs {
@@ -535,6 +541,187 @@ func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
 			j := c - a.colStart
 			mc := j + cOffset
 			mat.set(mr, mc, v)
+		}
+	}
+}
+
+//Negate performs a piecewise logical negation.
+func (mat *Matrix) Negate() {
+	for i := 0; i < mat.rows; i++ {
+		for j := 0; j < mat.cols; j++ {
+			r := i + mat.rowStart
+			c := j + mat.colStart
+
+			v := mat.at(r, c)
+			mat.set(r, c, (v+1)%2)
+		}
+	}
+}
+
+//And executes a piecewise logical AND on the two matrices and stores the values in this matrix.
+func (mat *Matrix) And(a, b *Matrix) {
+	if a == nil || b == nil {
+		panic("AND input was found to be nil")
+	}
+
+	if mat == a || mat == b {
+		panic("AND self assignment not allowed")
+	}
+
+	if a.rows != b.rows || a.cols != b.cols {
+		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
+	}
+
+	if mat.rows != a.rows || mat.cols != a.cols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	}
+
+	mat.and(a, b)
+}
+
+func (mat *Matrix) and(a, b *Matrix) {
+	//first we need to clear mat
+	mat.zeroize(mat.rowStart, mat.colStart, mat.rows, mat.cols)
+
+	for r, cs1 := range a.rowValues {
+		if r < a.rowStart || a.rowStart+a.rows <= r {
+			continue
+		}
+		i := r - a.rowStart
+
+		cs2, has := b.rowValues[i+b.rowStart]
+		if !has {
+			continue
+		}
+
+		for c, _ := range cs1 {
+			if c < a.colStart || a.colStart+a.cols <= c {
+				continue
+			}
+			j := c - a.colStart
+
+			_, has := cs2[c]
+			if !has {
+				continue
+			}
+			mat.Set(i, j, 1)
+		}
+	}
+}
+
+//Or executes a piecewise logical OR on the two matrices and stores the values in this matrix.
+func (mat *Matrix) Or(a, b *Matrix) {
+	if a == nil || b == nil {
+		panic("OR input was found to be nil")
+	}
+
+	if mat == a || mat == b {
+		panic("OR self assignment not allowed")
+	}
+
+	if a.rows != b.rows || a.cols != b.cols {
+		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
+	}
+
+	if mat.rows != a.rows || mat.cols != a.cols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	}
+
+	mat.or(a, b)
+}
+
+func (mat *Matrix) or(a, b *Matrix) {
+	//first we need to clear mat
+	mat.zeroize(mat.rowStart, mat.colStart, mat.rows, mat.cols)
+
+	for r, cs1 := range a.rowValues {
+		if r < a.rowStart || a.rowStart+a.rows <= r {
+			continue
+		}
+		i := r - a.rowStart
+		for c, _ := range cs1 {
+			if c < a.colStart || a.colStart+a.cols <= c {
+				continue
+			}
+			j := c - a.colStart
+			mat.Set(i, j, 1)
+		}
+	}
+
+	for r, cs1 := range b.rowValues {
+		if r < b.rowStart || b.rowStart+b.rows <= r {
+			continue
+		}
+		i := r - b.rowStart
+		for c, _ := range cs1 {
+			if c < b.colStart || b.colStart+b.cols <= c {
+				continue
+			}
+			j := c - b.colStart
+			mat.Set(i, j, 1)
+		}
+	}
+}
+
+//XOr executes a piecewise logical XOR on the two matrices and stores the values in this matrix.
+func (mat *Matrix) XOr(a, b *Matrix) {
+	if a == nil || b == nil {
+		panic("XOR input was found to be nil")
+	}
+
+	if mat == a || mat == b {
+		panic("XOR self assignment not allowed")
+	}
+
+	if a.rows != b.rows || a.cols != b.cols {
+		panic(fmt.Sprintf("XOR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
+	}
+
+	if mat.rows != a.rows || mat.cols != a.cols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	}
+
+	mat.xor(a, b)
+}
+
+func (mat *Matrix) xor(a, b *Matrix) {
+	//first we need to clear mat
+	mat.zeroize(mat.rowStart, mat.colStart, mat.rows, mat.cols)
+
+	for r, cs1 := range a.rowValues {
+		if r < a.rowStart || a.rowStart+a.rows <= r {
+			continue
+		}
+		i := r - a.rowStart
+		for c, _ := range cs1 {
+			if c < a.colStart || a.colStart+a.cols <= c {
+				continue
+			}
+			j := c - a.colStart
+
+			if b.at(i+b.rowStart, j+b.colStart) == 1 {
+				continue
+			}
+
+			mat.Set(i, j, 1)
+		}
+	}
+
+	for r, cs1 := range b.rowValues {
+		if r < b.rowStart || b.rowStart+b.rows <= r {
+			continue
+		}
+		i := r - b.rowStart
+		for c, _ := range cs1 {
+			if c < b.colStart || b.colStart+b.cols <= c {
+				continue
+			}
+			j := c - b.colStart
+			if a.at(i+a.rowStart, j+a.colStart) == 1 {
+				continue
+			}
+
+			mat.Set(i, j, 1)
 		}
 	}
 }
