@@ -183,6 +183,74 @@ func TestVector_Slice2(t *testing.T) {
 	}
 }
 
+func TestVector_And(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Vector
+	}{
+		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 0, 0, 1)},
+		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.And(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestVector_Or(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Vector
+	}{
+		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 1, 1, 1)},
+		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 1, 1, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.Or(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestVector_XOr(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *Vector
+	}{
+		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 1, 1, 0)},
+		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 1, 1, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.XOr(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestVector_Negate(t *testing.T) {
+	tests := []struct {
+		x, expected *Vector
+	}{
+		{NewVec(4, 0, 1, 0, 1), NewVec(4, 1, 0, 1, 0)},
+		{NewVec(4, 0, 0, 1, 1), NewVec(4, 1, 1, 0, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.x.Negate()
+			if !test.x.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.x)
+			}
+		})
+	}
+}
+
 func TestTransposedVector_Set(t *testing.T) {
 	tests := []struct {
 		source, result *TransposedVector
@@ -353,5 +421,73 @@ func TestTransposedVector_JSON(t *testing.T) {
 	}
 	if !v.Equals(&actual) {
 		t.Fatalf("expected %v but found %v", v, actual)
+	}
+}
+
+func TestTransposedVector_And(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *TransposedVector
+	}{
+		{NewTVec(4, 0, 1, 0, 1), NewTVec(4, 0, 0, 1, 1), NewTVec(4), NewTVec(4, 0, 0, 0, 1)},
+		{NewTVec(4, 0, 0, 1, 1), NewTVec(4, 0, 1, 0, 1), NewTVec(4), NewTVec(4, 0, 0, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.And(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestTransposedVector_Or(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *TransposedVector
+	}{
+		{NewTVec(4, 0, 1, 0, 1), NewTVec(4, 0, 0, 1, 1), NewTVec(4), NewTVec(4, 0, 1, 1, 1)},
+		{NewTVec(4, 0, 0, 1, 1), NewTVec(4, 0, 1, 0, 1), NewTVec(4), NewTVec(4, 0, 1, 1, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.Or(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestTransposedVector_XOr(t *testing.T) {
+	tests := []struct {
+		x, y, result, expected *TransposedVector
+	}{
+		{NewTVec(4, 0, 1, 0, 1), NewTVec(4, 0, 0, 1, 1), NewTVec(4), NewTVec(4, 0, 1, 1, 0)},
+		{NewTVec(4, 0, 0, 1, 1), NewTVec(4, 0, 1, 0, 1), NewTVec(4), NewTVec(4, 0, 1, 1, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.result.XOr(test.x, test.y)
+			if !test.result.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.result)
+			}
+		})
+	}
+}
+
+func TestTransposedVector_Negate(t *testing.T) {
+	tests := []struct {
+		x, expected *TransposedVector
+	}{
+		{NewTVec(4, 0, 1, 0, 1), NewTVec(4, 1, 0, 1, 0)},
+		{NewTVec(4, 0, 0, 1, 1), NewTVec(4, 1, 1, 0, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.x.Negate()
+			if !test.x.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.x)
+			}
+		})
 	}
 }

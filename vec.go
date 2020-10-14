@@ -196,6 +196,67 @@ func (vec *Vector) Mul(vec2 *Vector, mat *Matrix) {
 	vec.mat.mul(vec2.mat, mat)
 }
 
+func (vec *Vector) And(a, b *Vector) {
+	if a == nil || b == nil {
+		panic("AND input was found to be nil")
+	}
+
+	if vec == a || vec == b {
+		panic("AND self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if vec.Len() != a.Len() {
+		panic(fmt.Sprintf("vec len:%v does not match expected %v", vec.Len(), a.Len()))
+	}
+	vec.mat.and(a.mat, b.mat)
+}
+
+func (vec *Vector) Or(a, b *Vector) {
+	if a == nil || b == nil {
+		panic("OR input was found to be nil")
+	}
+
+	if vec == a || vec == b {
+		panic("OR self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if vec.Len() != a.Len() {
+		panic(fmt.Sprintf("vec len:%v does not match expected %v", vec.Len(), a.Len()))
+	}
+	vec.mat.or(a.mat, b.mat)
+}
+
+func (vec *Vector) XOr(a, b *Vector) {
+	if a == nil || b == nil {
+		panic("XOR input was found to be nil")
+	}
+
+	if vec == a || vec == b {
+		panic("XOR self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("XOR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if vec.Len() != a.Len() {
+		panic(fmt.Sprintf("vec len:%v does not match expected %v", vec.Len(), a.Len()))
+	}
+	vec.mat.xor(a.mat, b.mat)
+}
+
+func (vec *Vector) Negate() {
+	vec.mat.Negate()
+}
+
 type TransposedVector struct {
 	mat *Matrix
 }
@@ -374,4 +435,65 @@ func (tvec *TransposedVector) String() string {
 
 	table.Render()
 	return buff.String()
+}
+
+func (tvec *TransposedVector) And(a, b *TransposedVector) {
+	if a == nil || b == nil {
+		panic("AND input was found to be nil")
+	}
+
+	if tvec == a || tvec == b {
+		panic("AND self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if tvec.Len() != a.Len() {
+		panic(fmt.Sprintf("tvec len:%v does not match expected %v", tvec.Len(), a.Len()))
+	}
+	tvec.mat.and(a.mat, b.mat)
+}
+
+func (tvec *TransposedVector) Or(a, b *TransposedVector) {
+	if a == nil || b == nil {
+		panic("OR input was found to be nil")
+	}
+
+	if tvec == a || tvec == b {
+		panic("OR self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if tvec.Len() != a.Len() {
+		panic(fmt.Sprintf("tvec len:%v does not match expected %v", tvec.Len(), a.Len()))
+	}
+	tvec.mat.or(a.mat, b.mat)
+}
+
+func (tvec *TransposedVector) XOr(a, b *TransposedVector) {
+	if a == nil || b == nil {
+		panic("XOR input was found to be nil")
+	}
+
+	if tvec == a || tvec == b {
+		panic("XOR self assignment not allowed")
+	}
+
+	if a.Len() != b.Len() {
+		panic(fmt.Sprintf("XOR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
+	}
+
+	if tvec.Len() != a.Len() {
+		panic(fmt.Sprintf("tvec len:%v does not match expected %v", tvec.Len(), a.Len()))
+	}
+	tvec.mat.xor(a.mat, b.mat)
+}
+
+func (tvec *TransposedVector) Negate() {
+	tvec.mat.Negate()
 }
