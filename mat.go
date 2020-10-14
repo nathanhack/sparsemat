@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -15,6 +16,42 @@ type Matrix struct {
 	cols      int                 // total number cols available to this matrix
 	colStart  int                 // [colStart,colEnd)
 
+}
+
+type matrix struct {
+	RowValues map[int]map[int]int //hold rowValues for (X,Y)
+	ColValues map[int]map[int]int //easy access to (Y,X)
+	Rows      int                 // total number rows available to this matrix
+	RowStart  int                 // [rowStart,rowEnd)
+	Cols      int                 // total number cols available to this matrix
+	ColStart  int                 // [colStart,colEnd)
+
+}
+
+func (mat *Matrix) MarshalJSON() ([]byte, error) {
+	return json.Marshal(matrix{
+		RowValues: mat.rowValues,
+		ColValues: mat.colValues,
+		Rows:      mat.rows,
+		RowStart:  mat.rowStart,
+		Cols:      mat.cols,
+		ColStart:  mat.colStart,
+	})
+}
+
+func (mat *Matrix) UnmarshalJSON(bytes []byte) error {
+	var m matrix
+	err := json.Unmarshal(bytes, &m)
+	if err != nil {
+		return err
+	}
+	mat.rowValues = m.RowValues
+	mat.colValues = m.ColValues
+	mat.rows = m.Rows
+	mat.rowStart = m.RowStart
+	mat.cols = m.Cols
+	mat.colStart = m.ColStart
+	return nil
 }
 
 //NewMat creates a new matrix with the specified number of rows and cols.

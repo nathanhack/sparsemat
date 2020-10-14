@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 )
@@ -450,5 +451,23 @@ func TestMatrix_SetMatrix2(t *testing.T) {
 				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
 			}
 		})
+	}
+}
+
+func TestJson(t *testing.T) {
+	m := Identity(3)
+
+	bs, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+
+	var actual Matrix
+	err = json.Unmarshal(bs, &actual)
+	if err != nil {
+		t.Fatalf("expected no error found:%v", err)
+	}
+	if !m.Equals(&actual) {
+		t.Fatalf("expected %v but found %v", m, actual)
 	}
 }
