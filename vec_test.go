@@ -100,6 +100,20 @@ func TestVector_Set(t *testing.T) {
 	}
 }
 
+func TestVector_Set2(t *testing.T) {
+	m := NewMat(5, 5)
+	for i := 0; i < 5; i++ {
+		row := m.Row(i)
+		row.Set(i, 1)
+	}
+
+	expected := NewMat(5, 5, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+
+	if !expected.Equals(m) {
+		t.Fatalf("expected %v but found %v", expected, m)
+	}
+}
+
 func TestVector_SetVec(t *testing.T) {
 	tests := []struct {
 		original         *Vector
@@ -267,6 +281,20 @@ func TestTransposedVector_Set(t *testing.T) {
 				t.Fatalf("expected %v but found %v", test.source, test.result)
 			}
 		})
+	}
+}
+
+func TestTransposedVector_Set2(t *testing.T) {
+	m := NewMat(5, 5)
+	for j := 0; j < 5; j++ {
+		col := m.Column(j)
+		col.Set(j, 1)
+	}
+
+	expected := NewMat(5, 5, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+
+	if !expected.Equals(m) {
+		t.Fatalf("expected %v but found %v", expected, m)
 	}
 }
 

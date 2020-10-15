@@ -102,7 +102,7 @@ func (vec *Vector) Set(i, value int) {
 }
 
 func (vec *Vector) set(j, value int) {
-	vec.mat.set(0, j, value)
+	vec.mat.set(vec.mat.rowStart, j, value)
 }
 
 //SetVec replaces the values of this vector with the values of from vector a.
@@ -398,7 +398,7 @@ func (tvec *TransposedVector) Slice(j, len int) *TransposedVector {
 }
 
 func (tvec *TransposedVector) set(i, value int) {
-	tvec.mat.set(i, 0, value)
+	tvec.mat.set(i, tvec.mat.colStart, value)
 }
 
 func (tvec *TransposedVector) Equals(v *TransposedVector) bool {
