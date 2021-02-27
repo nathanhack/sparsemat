@@ -207,7 +207,8 @@ func (mat *Matrix) Set(i, j, value int) {
 	mat.set(r, c, value)
 }
 
-func (mat *Matrix) set(r, c, value int) {
+func (mat *Matrix) set(r, c, tvalue int) {
+	value := tvalue % 2
 	if value == 0 {
 		ys, ok := mat.rowValues[r]
 		if !ok {
