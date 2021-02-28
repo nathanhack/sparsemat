@@ -185,6 +185,60 @@ func (mat *Matrix) At(i, j int) int {
 	return mat.at(r, c)
 }
 
+func (mat *Matrix) SwapRows(i1, i2 int) {
+	mat.checkRowBounds(i1)
+	mat.checkRowBounds(i2)
+
+	//make a temp copy of i1 row and zero it out
+	tmp := make(map[int]int)
+	for c, v := range mat.rowValues[i1] {
+		if mat.colStart <= c && c <= mat.colStart+mat.cols {
+			tmp[c] = v
+			mat.set(i1, c, 0)
+		}
+	}
+
+	//move the from i2 to i1 and zero out i2's
+	for c, v := range mat.rowValues[i2] {
+		if mat.colStart <= c && c <= mat.colStart+mat.cols {
+			mat.set(i1, c, v)
+			mat.set(i2, c, 0)
+		}
+	}
+
+	//last part of the swap
+	for c, v := range tmp {
+		mat.set(i2, c, v)
+	}
+}
+
+func (mat *Matrix) SwapColumns(j1, j2 int) {
+	mat.checkColBounds(j1)
+	mat.checkColBounds(j2)
+
+	//make a temp copy of i1 row
+	tmp := make(map[int]int)
+	for r, v := range mat.colValues[j1] {
+		if mat.rowStart <= r && r <= mat.rowStart+mat.rows {
+			tmp[r] = v
+			mat.set(r, j1, 0)
+		}
+	}
+
+	//move the from j2 to j1 and clear j2
+	for r, v := range mat.colValues[j2] {
+		if mat.rowStart <= r && r <= mat.rowStart+mat.rows {
+			mat.set(r, j1, v)
+			mat.set(r, j2, 0)
+		}
+	}
+
+	//populate j2 column
+	for r, v := range tmp {
+		mat.set(r, j2, v)
+	}
+}
+
 func (mat *Matrix) at(r, c int) int {
 	ys, ok := mat.rowValues[r]
 	if !ok {
