@@ -589,3 +589,39 @@ func TestMatrix_SwapColumns(t *testing.T) {
 		})
 	}
 }
+
+func TestMatrix_AddRows(t *testing.T) {
+	tests := []struct {
+		input        *Matrix
+		i1, i2, dest int
+		expected     *Matrix
+	}{
+		{Identity(3), 0, 1, 2, NewMat(3, 3, 1, 0, 0, 0, 1, 0, 1, 1, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.input.AddRows(test.i1, test.i2, test.dest)
+			if !test.input.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.input)
+			}
+		})
+	}
+}
+
+func TestMatrix_AddCols(t *testing.T) {
+	tests := []struct {
+		input        *Matrix
+		j1, j2, dest int
+		expected     *Matrix
+	}{
+		{Identity(3), 0, 1, 2, NewMat(3, 3, 1, 0, 1, 0, 1, 1, 0, 0, 0)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			test.input.AddCols(test.j1, test.j2, test.dest)
+			if !test.input.Equals(test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, test.input)
+			}
+		})
+	}
+}

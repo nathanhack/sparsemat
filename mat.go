@@ -239,6 +239,54 @@ func (mat *Matrix) SwapColumns(j1, j2 int) {
 	}
 }
 
+//AddRows is fast row operation to add two
+// rows and put the result in a destination row.
+func (mat *Matrix) AddRows(i1, i2, dest int) {
+	mat.checkRowBounds(i1)
+	mat.checkRowBounds(i2)
+	mat.checkRowBounds(dest)
+
+	tmp := make(map[int]int)
+
+	for c, v := range mat.rowValues[i1] {
+		tmp[c] += v
+	}
+
+	for c, v := range mat.rowValues[i2] {
+		tmp[c] += v
+	}
+
+	mat.zeroize(dest, mat.colStart, 1, mat.cols)
+
+	for c, v := range tmp {
+		mat.set(dest, c, v)
+	}
+}
+
+//AddRows is fast row operation to add two
+// rows and put the result in a destination row.
+func (mat *Matrix) AddCols(j1, j2, dest int) {
+	mat.checkColBounds(j1)
+	mat.checkColBounds(j2)
+	mat.checkColBounds(dest)
+
+	tmp := make(map[int]int)
+
+	for r, v := range mat.colValues[j1] {
+		tmp[r] += v
+	}
+
+	for r, v := range mat.colValues[j2] {
+		tmp[r] += v
+	}
+
+	mat.zeroize(mat.rowStart, dest, mat.rows, 1)
+
+	for r, v := range tmp {
+		mat.set(r, dest, v)
+	}
+}
+
 func (mat *Matrix) at(r, c int) int {
 	ys, ok := mat.rowValues[r]
 	if !ok {
