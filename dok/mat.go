@@ -189,6 +189,10 @@ func (mat *Matrix) SwapRows(i1, i2 int) {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 
+	if i1 == i2 {
+		return
+	}
+
 	//make a temp copy of i1 row and zero it out
 	tmp := make(map[int]int)
 	for c, v := range mat.rowValues[i1] {

@@ -121,8 +121,8 @@ func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
 
 	mat.checkRowBounds(i)
 	mat.checkColBounds(j)
-	mat.checkRowBounds(i + rows)
-	mat.checkColBounds(j + cols)
+	mat.checkRowBounds(i + rows - 1)
+	mat.checkColBounds(j + cols - 1)
 
 	return mat.slice(i, j, rows, cols)
 }
@@ -167,6 +167,10 @@ func (mat *Matrix) At(i, j int) int {
 func (mat *Matrix) SwapRows(i1, i2 int) {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
+
+	if i1 == i2 {
+		return
+	}
 
 	start1, end1 := findIndexRange(mat.rowIndices, i1)
 	start2, end2 := findIndexRange(mat.rowIndices, i2)
