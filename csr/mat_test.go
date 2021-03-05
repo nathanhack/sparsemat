@@ -525,6 +525,7 @@ func TestMatrix_AddRows(t *testing.T) {
 		expected     *Matrix
 	}{
 		{Identity(3), 0, 1, 2, NewMat(3, 3, 1, 0, 0, 0, 1, 0, 1, 1, 0)},
+		{NewMat(4, 5, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1), 1, 2, 1, NewMat(4, 5, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

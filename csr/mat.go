@@ -242,13 +242,13 @@ func (mat *Matrix) AddRows(i1, i2, dest int) {
 
 	start1, end1 := findIndexRange(mat.rowIndices, i1)
 	for i := start1; i < end1; i++ {
-		r := mat.rowIndices[i]
+		r := mat.colIndices[i]
 		tmp[r] = 1
 	}
 
 	start1, end1 = findIndexRange(mat.rowIndices, i2)
 	for i := start1; i < end1; i++ {
-		r := mat.rowIndices[i]
+		r := mat.colIndices[i]
 		tmp[r] += 1
 	}
 
