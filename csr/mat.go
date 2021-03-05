@@ -98,6 +98,21 @@ func Identity(size int) *Matrix {
 	return mat
 }
 
+//Copy will create a NEW matrix that will have all the same values as m.
+func Copy(m *Matrix) *Matrix {
+	mat := Matrix{
+		rows:       m.rows,
+		cols:       m.cols,
+		rowIndices: make([]int, len(m.rowIndices)),
+		colIndices: make([]int, len(m.colIndices)),
+	}
+
+	copy(mat.colIndices, m.colIndices)
+	copy(mat.rowIndices, m.rowIndices)
+
+	return &mat
+}
+
 //Slice creates a new matrix containing the slice of data.
 func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
 	if rows <= 0 || cols <= 0 {
