@@ -1,4 +1,4 @@
-package mat
+package dok
 
 import (
 	"encoding/json"
@@ -60,7 +60,7 @@ func (mat *Matrix) UnmarshalJSON(bytes []byte) error {
 // be 0's or 1's anything else may have unexpected behavior matrix's methods.
 func NewMat(rows, cols int, values ...int) *Matrix {
 	if len(values) != 0 && len(values) != rows*cols {
-		panic(fmt.Sprintf("matrix data length (%v) to size mismatch expected %v", len(values), rows*cols))
+		panic(fmt.Sprintf("matrix data length (%v) to length mismatch expected %v", len(values), rows*cols))
 	}
 
 	mat := Matrix{
