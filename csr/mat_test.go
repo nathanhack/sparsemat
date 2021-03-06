@@ -489,6 +489,7 @@ func TestMatrix_SwapRows(t *testing.T) {
 	}{
 		{Identity(4), 0, 0, NewMat(4, 4, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)},
 		{Identity(4), 1, 3, NewMat(4, 4, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0)},
+		{NewMat(4, 5, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1), 2, 3, NewMat(4, 5, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

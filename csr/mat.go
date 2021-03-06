@@ -173,9 +173,32 @@ func (mat *Matrix) SwapRows(i1, i2 int) {
 	}
 
 	start1, end1 := findIndexRange(mat.rowIndices, i1)
-	start2, end2 := findIndexRange(mat.rowIndices, i2)
+	i1col := make([]int, end1-start1)
+	copy(i1col, mat.colIndices[start1:end1])
+	mat.rowIndices = cutRange(mat.rowIndices, start1, end1)
+	mat.colIndices = cutRange(mat.colIndices, start1, end1)
 
-	mat.colIndices = splitCombine(mat.colIndices, start1, end1, start2, end2)
+	start2, end2 := findIndexRange(mat.rowIndices, i2)
+	i2col := make([]int, end2-start2)
+	copy(i2col, mat.colIndices[start2:end2])
+	mat.rowIndices = cutRange(mat.rowIndices, start2, end2)
+	mat.colIndices = cutRange(mat.colIndices, start2, end2)
+
+	start1 = findIndex(mat.rowIndices, i2)
+	mat.rowIndices = insertRange(mat.rowIndices, start1, repeatSlice(len(i1col), i2))
+	mat.colIndices = insertRange(mat.colIndices, start1, i1col)
+
+	start2 = findIndex(mat.rowIndices, i1)
+	mat.rowIndices = insertRange(mat.rowIndices, start2, repeatSlice(len(i2col), i1))
+	mat.colIndices = insertRange(mat.colIndices, start2, i2col)
+}
+
+func repeatSlice(size, value int) []int {
+	result := make([]int, size)
+	for i := 0; i < size; i++ {
+		result[i] = value
+	}
+	return result
 }
 
 func splitCombine(orig []int, swap1start, swap1end, swap2start, swap2end int) []int {
