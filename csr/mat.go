@@ -300,24 +300,50 @@ func (mat *Matrix) AddRows(i1, i2, dest int) {
 		tmp[r] += 1
 	}
 
-	start1, end1 = findIndexRange(mat.rowIndices, dest)
-
-	mat.rowIndices = cutRange(mat.rowIndices, start1, end1)
-	mat.colIndices = cutRange(mat.colIndices, start1, end1)
-
-	rows := make([]int, 0, end1-start1)
-	cols := make([]int, 0, end1-start1)
+	cols := make([]int, 0, len(tmp))
 
 	for c, v := range tmp {
 		if v%2 == 1 {
-			rows = append(rows, dest)
 			cols = append(cols, c)
 		}
 	}
 	sort.Ints(cols)
+	colsLen := len(cols)
 
-	mat.rowIndices = insertRange(mat.rowIndices, start1, rows)
-	mat.colIndices = insertRange(mat.colIndices, start1, cols)
+	//next find out where it's to go
+	start1, end1 = findIndexRange(mat.rowIndices, dest)
+
+	diff := end1 - start1
+	if diff > colsLen {
+		//it's too big we'll cut it down to size
+		count := diff - colsLen
+		rowLen := len(mat.rowIndices)
+		for i := start1 + count; i < rowLen; i++ {
+			iCount := i - count
+			mat.rowIndices[iCount] = mat.rowIndices[i]
+			mat.colIndices[iCount] = mat.colIndices[i]
+		}
+		end := rowLen - count
+		mat.rowIndices = mat.rowIndices[:end]
+		mat.colIndices = mat.colIndices[:end]
+	} else if diff < colsLen {
+		count := colsLen - diff
+		for i := 0; i < count; i++ {
+			mat.rowIndices = append(mat.rowIndices, 0)
+			mat.colIndices = append(mat.colIndices, 0)
+		}
+		for i := colsLen - 1; i >= start1; i-- {
+			t := i + count
+			mat.rowIndices[t] = mat.rowIndices[i]
+			mat.colIndices[t] = mat.colIndices[i]
+		}
+	}
+
+	for i := 0; i < colsLen; i++ {
+		t := start1 + i
+		mat.rowIndices[t] = dest
+		mat.colIndices[t] = cols[i]
+	}
 }
 
 func findIndexRange(indices []int, index int) (start, end int) {
@@ -346,6 +372,17 @@ func insertOneElement(s []int, index int, value int) []int {
 	return s
 }
 
+func insertCount(s []int, index int, count int) []int {
+	for i := 0; i < count; i++ {
+		s = append(s, 0)
+	}
+	for i := len(s) - 1; i >= index; i-- {
+		s[i+count] = s[i]
+	}
+	//Note the values index to index+count are unchanged
+	return s
+}
+
 func insertRange(s []int, index int, vs []int) []int {
 	if n := len(s) + len(vs); n <= cap(s) {
 		s2 := s[:n]
@@ -364,6 +401,10 @@ func cutRange(a []int, start1 int, end1 int) []int {
 	copy(a[start1:], a[end1:])
 	a = a[:len(a)-(end1-start1)]
 	return a
+}
+
+func cutCount(a []int, index, count int) []int {
+	return cutRange(a, index, index+count)
 }
 
 func (mat *Matrix) at(r, c int) int {

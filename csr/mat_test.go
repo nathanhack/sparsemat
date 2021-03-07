@@ -557,3 +557,15 @@ func TestMatrix_AddRows(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkAddRow(b *testing.B) {
+	a := NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 1; j < 5; j++ {
+			a.AddRows(0, j, j)
+			a.AddRows(4, j, 4)
+			a.AddRows(4, j, 4)
+		}
+	}
+}
