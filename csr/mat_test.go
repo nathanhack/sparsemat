@@ -490,14 +490,34 @@ func TestMatrix_SwapRows(t *testing.T) {
 		{Identity(4), 0, 0, NewMat(4, 4, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)},
 		{Identity(4), 1, 3, NewMat(4, 4, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0)},
 		{NewMat(4, 5, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1), 2, 3, NewMat(4, 5, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0)},
+		{NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1), 0, 1, NewMat(5, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)},
+		{NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1), 1, 2, NewMat(5, 4, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1)},
+		{NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), 4, 0, NewMat(5, 4, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1)},
+		{NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), 0, 1, NewMat(5, 4, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0)},
+		{NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1), 0, 2, NewMat(5, 4, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			test.input.SwapRows(test.a, test.b)
 			if !test.input.Equals(test.expected) {
-				t.Fatalf("expected %v but found %v", test.expected, test.input)
+				t.Fatalf("after rowswap(%v <> %v) expected \n%v\n but found \n%v\n", test.a, test.b, test.expected, test.input)
 			}
 		})
+	}
+}
+
+func BenchmarkSwapRow(b *testing.B) {
+	a := NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)
+	aa := NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0)
+	aaa := NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		a.SwapRows(0, 1)
+		a.SwapRows(0, 1)
+		aa.SwapRows(0, 1)
+		aa.SwapRows(0, 1)
+		aaa.SwapRows(0, 4)
+		aaa.SwapRows(0, 4)
 	}
 }
 

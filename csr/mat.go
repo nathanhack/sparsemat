@@ -172,55 +172,80 @@ func (mat *Matrix) SwapRows(i1, i2 int) {
 		return
 	}
 
+	if i1 > i2 {
+		i1, i2 = i2, i1
+	}
+
 	start1, end1 := findIndexRange(mat.rowIndices, i1)
-	i1col := make([]int, end1-start1)
-	copy(i1col, mat.colIndices[start1:end1])
-	mat.rowIndices = cutRange(mat.rowIndices, start1, end1)
-	mat.colIndices = cutRange(mat.colIndices, start1, end1)
+	len1 := end1 - start1
 
 	start2, end2 := findIndexRange(mat.rowIndices, i2)
-	i2col := make([]int, end2-start2)
-	copy(i2col, mat.colIndices[start2:end2])
-	mat.rowIndices = cutRange(mat.rowIndices, start2, end2)
-	mat.colIndices = cutRange(mat.colIndices, start2, end2)
+	len2 := end2 - start2
 
-	start1 = findIndex(mat.rowIndices, i2)
-	mat.rowIndices = insertRange(mat.rowIndices, start1, repeatSlice(len(i1col), i2))
-	mat.colIndices = insertRange(mat.colIndices, start1, i1col)
-
-	start2 = findIndex(mat.rowIndices, i1)
-	mat.rowIndices = insertRange(mat.rowIndices, start2, repeatSlice(len(i2col), i1))
-	mat.colIndices = insertRange(mat.colIndices, start2, i2col)
-}
-
-func repeatSlice(size, value int) []int {
-	result := make([]int, size)
-	for i := 0; i < size; i++ {
-		result[i] = value
-	}
-	return result
-}
-
-func splitCombine(orig []int, swap1start, swap1end, swap2start, swap2end int) []int {
-	if swap2start < swap1start {
-		swap1start, swap2start = swap2start, swap1start
-		swap1end, swap2end = swap2end, swap1end
+	if len1 == len2 {
+		//an easy swap
+		for i := 0; i < len1; i++ {
+			mat.colIndices[start2+i], mat.colIndices[start1+i] = mat.colIndices[start1+i], mat.colIndices[start2+i]
+		}
+		return
 	}
 
-	o1 := orig[:swap1start]
-	r1 := orig[swap1start:swap1end]
-	o2 := orig[swap1end:swap2start]
-	r2 := orig[swap2start:swap2end]
-	o3 := orig[swap2end:]
+	//we need to make a copy of the data
+	i1col := make([]int, len1)
+	for i := 0; i < len1; i++ {
+		i1col[i] = mat.colIndices[start1+i]
+	}
 
-	tmp := make([]int, 0, len(orig))
+	i2col := make([]int, len2)
+	for i := 0; i < len2; i++ {
+		i2col[i] = mat.colIndices[start2+i]
+	}
 
-	tmp = append(tmp, o1...)
-	tmp = append(tmp, r2...)
-	tmp = append(tmp, o2...)
-	tmp = append(tmp, r1...)
-	tmp = append(tmp, o3...)
-	return tmp
+	if len1 < len2 {
+		//we only need to shift to the right
+		///  i1..i1..#..#..i2..i2
+		lendiff := len2 - len1
+		s221 := start2 + lendiff
+		for i := start2 - 1; i >= end1; i-- {
+			mat.rowIndices[i+lendiff] = mat.rowIndices[i]
+			mat.colIndices[i+lendiff] = mat.colIndices[i]
+		}
+
+		for i := 0; i < len1; i++ {
+			t := s221 + i
+			mat.rowIndices[t] = i2
+			mat.colIndices[t] = i1col[i]
+		}
+
+		for i := 0; i < len2; i++ {
+			t := start1 + i
+			mat.rowIndices[t] = i1
+			mat.colIndices[t] = i2col[i]
+		}
+		return
+	}
+
+	//lastly we take care of the case when len2 < len1
+	//we only need to shift to the left
+	///  i1..i1..#..#..i2..i2
+	lendiff := len1 - len2
+	s221 := start2 - lendiff
+	for i := end1; i < start2; i++ {
+		mat.rowIndices[i-lendiff] = mat.rowIndices[i]
+		mat.colIndices[i-lendiff] = mat.colIndices[i]
+	}
+
+	for i := 0; i < len1; i++ {
+		t := s221 + i
+		mat.rowIndices[t] = i2
+		mat.colIndices[t] = i1col[i]
+	}
+
+	for i := 0; i < len2; i++ {
+		t := start1 + i
+		mat.rowIndices[t] = i1
+		mat.colIndices[t] = i2col[i]
+	}
 }
 
 func (mat *Matrix) SwapColumns(j1, j2 int) {
