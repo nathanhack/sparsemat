@@ -574,6 +574,21 @@ func TestMatrix_SwapRows(t *testing.T) {
 	}
 }
 
+func BenchmarkSwapRow(b *testing.B) {
+	a := NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)
+	aa := NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0)
+	aaa := NewMat(5, 4, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		a.SwapRows(0, 1)
+		a.SwapRows(0, 1)
+		aa.SwapRows(0, 1)
+		aa.SwapRows(0, 1)
+		aaa.SwapRows(0, 4)
+		aaa.SwapRows(0, 4)
+	}
+}
+
 func TestMatrix_SwapColumns(t *testing.T) {
 	tests := []struct {
 		input    *Matrix
@@ -608,6 +623,18 @@ func TestMatrix_AddRows(t *testing.T) {
 				t.Fatalf("expected %v but found %v", test.expected, test.input)
 			}
 		})
+	}
+}
+
+func BenchmarkAddRow(b *testing.B) {
+	a := NewMat(5, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 1; j < 5; j++ {
+			a.AddRows(0, j, j)
+			a.AddRows(4, j, 4)
+			a.AddRows(4, j, 4)
+		}
 	}
 }
 
