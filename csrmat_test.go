@@ -349,6 +349,10 @@ func TestCSRMatrix_SetRow(t *testing.T) {
 	}{
 		{CSRIdentity(3), 0, CSRVec(3, 0, 1, 0), CSRMat(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
 		{CSRIdentity(3), 1, CSRIdentity(3).Row(2), CSRMat(3, 3, 1, 0, 0, 0, 0, 1, 0, 0, 1)},
+		{CSRMat(4, 3), 0, CSRVec(3, 1, 1, 1), CSRMat(4, 3, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)},
+		{CSRMat(3, 4), 0, CSRVec(4, 1, 1, 1, 1), CSRMat(3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)},
+		{CSRMat(4, 3), 3, CSRVec(3, 1, 1, 1), CSRMat(4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1)},
+		{CSRMat(3, 4), 2, CSRVec(4, 1, 1, 1, 1), CSRMat(3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

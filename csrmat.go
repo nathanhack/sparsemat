@@ -576,7 +576,7 @@ func (mat *CSRMatrix) Row(i int) SparseVector {
 
 //SetRow sets the values in row i. The values' keys are expected to be column indices.
 func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
-	mat.checkColBounds(i)
+	mat.checkRowBounds(i)
 
 	if mat.cols != vec.Len() {
 		panic("matrix number of columns must equal length of vector")

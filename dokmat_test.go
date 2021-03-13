@@ -318,6 +318,19 @@ func TestDOKMatrix_Row(t *testing.T) {
 	}
 }
 
+func TestR(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		// TODO: test cases
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+		})
+	}
+}
+
 func TestDOKMatrix_SetColumn(t *testing.T) {
 	tests := []struct {
 		m        SparseMat
@@ -347,6 +360,10 @@ func TestDOKMatrix_SetRow(t *testing.T) {
 	}{
 		{DOKIdentity(3), 0, DOKVec(3, 0, 1, 0), DOKMat(3, 3, 0, 1, 0, 0, 1, 0, 0, 0, 1)},
 		{DOKIdentity(3), 1, DOKIdentity(3).Row(2), DOKMat(3, 3, 1, 0, 0, 0, 0, 1, 0, 0, 1)},
+		{DOKMat(4, 3), 0, DOKVec(3, 1, 1, 1), DOKMat(4, 3, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)},
+		{DOKMat(3, 4), 0, DOKVec(4, 1, 1, 1, 1), DOKMat(3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)},
+		{DOKMat(4, 3), 3, DOKVec(3, 1, 1, 1), DOKMat(4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1)},
+		{DOKMat(3, 4), 2, DOKVec(4, 1, 1, 1, 1), DOKMat(3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
