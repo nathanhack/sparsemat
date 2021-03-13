@@ -19,6 +19,7 @@ type SparseVector interface {
 	Or(a, b SparseVector)
 	XOr(a, b SparseVector)
 	Negate()
+	IsZero() bool
 }
 
 type SparseMat interface {

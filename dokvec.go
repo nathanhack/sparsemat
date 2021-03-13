@@ -315,3 +315,7 @@ func (vec *DOKVector) Negate() {
 		}
 	}
 }
+
+func (vec *DOKVector) IsZero() bool {
+	return len(vec.values) == 0
+}

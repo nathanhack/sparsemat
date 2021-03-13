@@ -340,3 +340,7 @@ func (vec *CSRVector) Negate() {
 	}
 	vec.indices = indices
 }
+
+func (vec *CSRVector) IsZero() bool {
+	return len(vec.indices) == 0
+}
