@@ -1,33 +1,33 @@
-package csr
+package sparsemat
 
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 )
 
-type Vector struct {
+type CSRVector struct {
 	length  int
 	indices []int
 }
 
-type vector struct {
+type csrVector struct {
 	Length  int
 	Indices []int
 }
 
-func (vec *Vector) MarshalJSON() ([]byte, error) {
-	return json.Marshal(vector{
+func (vec *CSRVector) MarshalJSON() ([]byte, error) {
+	return json.Marshal(csrVector{
 		Length:  vec.length,
 		Indices: vec.indices,
 	})
 }
 
-func (vec *Vector) UnmarshalJSON(bytes []byte) error {
-	var v vector
+func (vec *CSRVector) UnmarshalJSON(bytes []byte) error {
+	var v csrVector
 	err := json.Unmarshal(bytes, &v)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (vec *Vector) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func NewVec(length int, values ...int) *Vector {
+func CSRVec(length int, values ...int) SparseVector {
 	if len(values) != 0 {
 		if length != len(values) {
 			panic("length and number of values must be equal")
@@ -51,25 +51,29 @@ func NewVec(length int, values ...int) *Vector {
 		}
 	}
 
-	return &Vector{
+	return &CSRVector{
 		length:  length,
 		indices: indices,
 	}
 }
 
-//func CopyVec(a *Vector) *Vector {
-//
-//	indices := make([]int, len(a.indices))
-//	copy(indices, a.indices)
-//
-//	return &Vector{
-//		length:  a.length,
-//		indices: indices,
-//	}
-//}
+func CSRVecCopy(a SparseVector) SparseVector {
+	v := a.NonzeroValues()
+
+	indices := make([]int, 0, len(v))
+	for i := range v {
+		indices = append(indices, i)
+	}
+	sort.Ints(indices)
+
+	return &CSRVector{
+		length:  a.Len(),
+		indices: indices,
+	}
+}
 
 //String returns a string representation of this vector.
-func (vec *Vector) String() string {
+func (vec *CSRVector) String() string {
 	buff := &strings.Builder{}
 	table := tablewriter.NewWriter(buff)
 
@@ -88,19 +92,19 @@ func (vec *Vector) String() string {
 	return buff.String()
 }
 
-func (vec *Vector) checkBounds(i int) {
+func (vec *CSRVector) checkBounds(i int) {
 	if i < 0 || i >= vec.length {
 		panic(fmt.Sprintf("%v out of range: [0-%v]", i, vec.Len()-1))
 	}
 }
 
 //At returns the value at index i.
-func (vec *Vector) At(i int) int {
+func (vec *CSRVector) At(i int) int {
 	vec.checkBounds(i)
 	return vec.at(i)
 }
 
-func (vec *Vector) at(j int) int {
+func (vec *CSRVector) at(j int) int {
 	x := findIndex(vec.indices, j)
 	if x == len(vec.indices) || vec.indices[x] != j {
 		return 0
@@ -110,12 +114,12 @@ func (vec *Vector) at(j int) int {
 }
 
 //Set sets the value at row index i and column index j to value.
-func (vec *Vector) Set(i, value int) {
+func (vec *CSRVector) Set(i, value int) {
 	vec.checkBounds(i)
 	vec.set(i, value)
 }
 
-func (vec *Vector) set(j, value int) {
+func (vec *CSRVector) set(j, value int) {
 	x := findIndex(vec.indices, j)
 	// if value is zero we remove it from the structure
 	if value%2 == 0 {
@@ -133,34 +137,34 @@ func (vec *Vector) set(j, value int) {
 }
 
 //SetVec replaces the values of this vector with the values of from vector a.
-func (vec *Vector) SetVec(a *Vector, i int) {
+func (vec *CSRVector) SetVec(a SparseVector, i int) {
 	vec.checkBounds(i)
-	vec.checkBounds(a.length + i)
+	vec.checkBounds(a.Len() + i)
 
-	for ii := 0; ii < a.length; ii++ {
-		vec.set(ii+i, a.at(ii))
+	for ii := 0; ii < a.Len(); ii++ {
+		vec.set(ii+i, a.At(ii))
 	}
 }
 
-func (vec *Vector) Len() int {
+func (vec *CSRVector) Len() int {
 	return vec.length
 }
 
-func (vec *Vector) Dot(a *Vector) int {
+func (vec *CSRVector) Dot(a SparseVector) int {
 	min := vec.length
-	if min > a.length {
-		min = a.length
+	if min > a.Len() {
+		min = a.Len()
 	}
 	sum := 0
 	for i := 0; i < min; i++ {
 		j := vec.at(i)
-		k := a.at(i)
+		k := a.At(i)
 		sum += j * k
 	}
 	return sum % 2
 }
 
-func (vec *Vector) NonzeroValues() (indexToValues map[int]int) {
+func (vec *CSRVector) NonzeroValues() (indexToValues map[int]int) {
 	indexToValues = make(map[int]int)
 
 	for _, r := range vec.indices {
@@ -171,7 +175,7 @@ func (vec *Vector) NonzeroValues() (indexToValues map[int]int) {
 
 //Slice creates a slice of the Vector.  The slice will be connected to the original Vector, changes to one
 // causes changes in the other.
-func (vec *Vector) Slice(i, length int) *Vector {
+func (vec *CSRVector) Slice(i, length int) SparseVector {
 	if length <= 0 {
 		panic("slice len must >0")
 	}
@@ -179,7 +183,7 @@ func (vec *Vector) Slice(i, length int) *Vector {
 	vec.checkBounds(i)
 	vec.checkBounds(i + length)
 
-	v := &Vector{
+	v := &CSRVector{
 		length:  length,
 		indices: make([]int, 0),
 	}
@@ -190,7 +194,7 @@ func (vec *Vector) Slice(i, length int) *Vector {
 	return v
 }
 
-func (vec *Vector) Add(a, b *Vector) {
+func (vec *CSRVector) Add(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
 	}
@@ -202,26 +206,34 @@ func (vec *Vector) Add(a, b *Vector) {
 	}
 
 	for i := 0; i < vec.length; i++ {
-		vec.set(i, a.at(i)+b.at(i))
+		vec.set(i, a.At(i)+b.At(i))
 	}
 }
 
-func (vec *Vector) Equals(v *Vector) bool {
-	return vec.length == v.length && reflect.DeepEqual(vec.indices, v.indices)
+func (vec *CSRVector) Equals(v SparseVector) bool {
+	if vec.length != v.Len() {
+		return false
+	}
+
+	for i := 0; i < vec.length; i++ {
+		if vec.at(i) != v.At(i) {
+			return false
+		}
+	}
+	return true
 }
 
-func (vec *Vector) Mul(vec2 *Vector, mat *Matrix) {
+func (vec *CSRVector) MulMat(vec2 SparseVector, mat SparseMat) {
 	if vec == nil || vec2 == nil || mat == nil {
 		panic("vector multiply input was found to be nil")
 	}
-
-	if vec2.length != mat.rows {
-		panic(fmt.Sprintf("multiply shape misalignment can't vector-matrix multiply dims: (%v)x(%v,%v)", vec2.length, mat.rows, mat.cols))
+	matRows, matCols := mat.Dims()
+	if vec2.Len() != matRows {
+		panic(fmt.Sprintf("multiply shape misalignment can't vector-matrix multiply dims: (%v)x(%v,%v)", vec2.Len(), matRows, matCols))
 	}
 
-	_, matCols := mat.Dims()
 	if vec.length != matCols {
-		panic(fmt.Sprintf("vector not long enough to hold result, actual length:%v required:%v", vec.Len(), mat.cols))
+		panic(fmt.Sprintf("vector not long enough to hold result, actual length:%v required:%v", vec.Len(), matCols))
 	}
 
 	for c := 0; c < matCols; c++ {
@@ -229,7 +241,25 @@ func (vec *Vector) Mul(vec2 *Vector, mat *Matrix) {
 	}
 }
 
-func (vec *Vector) And(a, b *Vector) {
+func (vec *CSRVector) MatMul(mat SparseMat, vec2 SparseVector) {
+	if vec == nil || vec2 == nil || mat == nil {
+		panic("vector multiply input was found to be nil")
+	}
+	matRows, matCols := mat.Dims()
+	if vec2.Len() != matCols {
+		panic(fmt.Sprintf("multiply shape misalignment can't vector-matrix multiply dims: (%v,%v)x(%v)", matRows, matCols, vec2.Len()))
+	}
+
+	if vec.length != matRows {
+		panic(fmt.Sprintf("vector not long enough to hold result, actual length:%v required:%v", vec.Len(), matRows))
+	}
+
+	for r := 0; r < matRows; r++ {
+		vec.set(r, vec2.Dot(mat.Row(r)))
+	}
+}
+
+func (vec *CSRVector) And(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("AND input was found to be nil")
 	}
@@ -247,11 +277,11 @@ func (vec *Vector) And(a, b *Vector) {
 	}
 
 	for i := 0; i < vec.length; i++ {
-		vec.set(i, a.at(i)&b.at(i))
+		vec.set(i, a.At(i)&b.At(i))
 	}
 }
 
-func (vec *Vector) Or(a, b *Vector) {
+func (vec *CSRVector) Or(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("OR input was found to be nil")
 	}
@@ -269,11 +299,11 @@ func (vec *Vector) Or(a, b *Vector) {
 	}
 
 	for i := 0; i < vec.length; i++ {
-		vec.set(i, a.at(i)|b.at(i))
+		vec.set(i, a.At(i)|b.At(i))
 	}
 }
 
-func (vec *Vector) XOr(a, b *Vector) {
+func (vec *CSRVector) XOr(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
 	}
@@ -291,11 +321,11 @@ func (vec *Vector) XOr(a, b *Vector) {
 	}
 
 	for i := 0; i < vec.length; i++ {
-		vec.set(i, a.at(i)^b.at(i))
+		vec.set(i, a.At(i)^b.At(i))
 	}
 }
 
-func (vec *Vector) Negate() {
+func (vec *CSRVector) Negate() {
 	indices := make([]int, 0)
 
 	in := make(map[int]bool)

@@ -20,22 +20,20 @@ Future implementations:
 Importing:
 
 ```
-import mat "github.com/nathanhack/sparsemat/dok"
-//or 
-import mat "github.com/nathanhack/sparsemat/csr"
+import mat "github.com/nathanhack/sparsemat"
 ```
 
 Creating a matrix:
 
 ```
-m1 := mat.Identity(3)
-m2 := mat.NewMat(3,3, 1,0,0,0,1,0,0,0,1)
+m1 := mat.CSRIdentity(3)
+m2 := mat.DOKMat(3,3, 1,0,0,0,1,0,0,0,1)
 ```
 
 Multiplying: `Mul`
 
 ```
-r := mat.NewMat(3,3)
+r := mat.CSRMat(3,3)
 r.Mul(m1,m2) // multiplies m1xm2 and stores into r
 ```
 
@@ -50,7 +48,7 @@ fmt.Printf("value at (%v,%v) is now %v\n",1,1,r.At(1,1))
 Slices: `Slice`
 
 ```
-m := mat.NewMat(1,4, 1,1,1,1) // creates matrix [1 1 1 1]
+m := mat.DOKMat(1,4, 1,1,1,1) // creates matrix [1 1 1 1]
 s := m.Slice(0,1,1,2) // creates a slice (new matrix) of the two middle 1's [1 1]
 ```
 

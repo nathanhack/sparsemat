@@ -1,29 +1,28 @@
-package csr
+package sparsemat
 
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 )
 
-type Matrix struct {
+type CSRMatrix struct {
 	rows, cols int
 	rowIndices []int
 	colIndices []int
 }
 
-type matrix struct {
+type csrMatrix struct {
 	Rows, Cols int
 	RowIndices []int
 	ColIndices []int
 }
 
-func (mat *Matrix) MarshalJSON() ([]byte, error) {
-	return json.Marshal(matrix{
+func (mat *CSRMatrix) MarshalJSON() ([]byte, error) {
+	return json.Marshal(csrMatrix{
 		Rows:       mat.rows,
 		Cols:       mat.cols,
 		RowIndices: mat.rowIndices,
@@ -31,8 +30,8 @@ func (mat *Matrix) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (mat *Matrix) UnmarshalJSON(bytes []byte) error {
-	var m matrix
+func (mat *CSRMatrix) UnmarshalJSON(bytes []byte) error {
+	var m csrMatrix
 	err := json.Unmarshal(bytes, &m)
 	if err != nil {
 		return err
@@ -45,16 +44,20 @@ func (mat *Matrix) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-//NewMat creates a new matrix with the specified number of rows and cols.
+//CSRMat creates a new matrix with the specified number of rows and cols.
 // If values is empty, the matrix will be zeroized.
 // If values are not empty it must have rows*cols items.  The values are expected to
 // be 0's or 1's anything else may have unexpected behavior matrix's methods.
-func NewMat(rows, cols int, values ...int) *Matrix {
+func CSRMat(rows, cols int, values ...int) SparseMat {
+	return csrMat(rows, cols, values...)
+}
+
+func csrMat(rows, cols int, values ...int) *CSRMatrix {
 	if len(values) != 0 && len(values) != rows*cols {
 		panic(fmt.Sprintf("matrix data length (%v) to length mismatch expected %v", len(values), rows*cols))
 	}
 
-	mat := Matrix{
+	mat := CSRMatrix{
 		rows:       rows,
 		cols:       cols,
 		rowIndices: make([]int, 0),
@@ -65,7 +68,7 @@ func NewMat(rows, cols int, values ...int) *Matrix {
 		for i := 0; i < rows; i++ {
 			for j := 0; j < cols; j++ {
 				index := i*cols + j
-				mat.set(i, j, values[index])
+				mat.set(i, j, values[index]%2)
 			}
 		}
 	}
@@ -73,22 +76,15 @@ func NewMat(rows, cols int, values ...int) *Matrix {
 	return &mat
 }
 
-func NewMatFromVec(vec *Vector) *Matrix {
-	m := Matrix{
-		rows:       1,
-		cols:       vec.length,
-		rowIndices: make([]int, len(vec.indices)),
-		colIndices: make([]int, len(vec.indices)),
-	}
-
-	copy(m.colIndices, vec.indices)
-
-	return &m
+func CSRMatFromVec(vec SparseVector) SparseMat {
+	m := CSRMat(1, vec.Len())
+	m.SetRow(0, vec)
+	return m
 }
 
 //Identity create an identity matrix (one's on the diagonal).
-func Identity(size int) *Matrix {
-	mat := NewMat(size, size)
+func CSRIdentity(size int) SparseMat {
+	mat := csrMat(size, size)
 
 	for i := 0; i < size; i++ {
 		mat.rowIndices = append(mat.rowIndices, i)
@@ -99,22 +95,18 @@ func Identity(size int) *Matrix {
 }
 
 //Copy will create a NEW matrix that will have all the same values as m.
-func Copy(m *Matrix) *Matrix {
-	mat := Matrix{
-		rows:       m.rows,
-		cols:       m.cols,
-		rowIndices: make([]int, len(m.rowIndices)),
-		colIndices: make([]int, len(m.colIndices)),
+func CSRMatCopy(m SparseMat) SparseMat {
+	mat := csrMat(m.Dims())
+
+	for i := 0; i < mat.rows; i++ {
+		mat.SetRow(i, m.Row(i))
 	}
 
-	copy(mat.colIndices, m.colIndices)
-	copy(mat.rowIndices, m.rowIndices)
-
-	return &mat
+	return mat
 }
 
 //Slice creates a new matrix containing the slice of data.
-func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
+func (mat *CSRMatrix) Slice(i, j, rows, cols int) SparseMat {
 	if rows <= 0 || cols <= 0 {
 		panic("slice rows and cols must >= 1")
 	}
@@ -127,8 +119,8 @@ func (mat *Matrix) Slice(i, j, rows, cols int) *Matrix {
 	return mat.slice(i, j, rows, cols)
 }
 
-func (mat *Matrix) slice(r, c, rows, cols int) *Matrix {
-	m := NewMat(rows, cols)
+func (mat *CSRMatrix) slice(r, c, rows, cols int) *CSRMatrix {
+	m := csrMat(rows, cols)
 
 	for i := 0; i < rows; i++ {
 		for j := 0; j < cols; j++ {
@@ -139,32 +131,32 @@ func (mat *Matrix) slice(r, c, rows, cols int) *Matrix {
 	return m
 }
 
-func (mat *Matrix) checkRowBounds(i int) {
+func (mat *CSRMatrix) checkRowBounds(i int) {
 	if i < 0 || i >= mat.rows {
 		panic(fmt.Sprintf("%v out of range: [0-%v]", i, mat.rows-1))
 	}
 }
 
-func (mat *Matrix) checkColBounds(j int) {
+func (mat *CSRMatrix) checkColBounds(j int) {
 	if j < 0 || j >= mat.cols {
 		panic(fmt.Sprintf("%v out of range: [0-%v]", j, mat.cols-1))
 	}
 }
 
 //Dims returns the dimensions of the matrix.
-func (mat *Matrix) Dims() (int, int) {
+func (mat *CSRMatrix) Dims() (int, int) {
 	return mat.rows, mat.cols
 }
 
 //At returns the value at row index i and column index j.
-func (mat *Matrix) At(i, j int) int {
+func (mat *CSRMatrix) At(i, j int) int {
 	mat.checkRowBounds(i)
 	mat.checkColBounds(j)
 
 	return mat.at(i, j)
 }
 
-func (mat *Matrix) SwapRows(i1, i2 int) {
+func (mat *CSRMatrix) SwapRows(i1, i2 int) {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 
@@ -248,7 +240,7 @@ func (mat *Matrix) SwapRows(i1, i2 int) {
 	}
 }
 
-func (mat *Matrix) SwapColumns(j1, j2 int) {
+func (mat *CSRMatrix) SwapColumns(j1, j2 int) {
 	mat.checkColBounds(j1)
 	mat.checkColBounds(j2)
 
@@ -281,7 +273,7 @@ func (mat *Matrix) SwapColumns(j1, j2 int) {
 
 //AddRows is fast row operation to add two
 // rows and put the result in a destination row.
-func (mat *Matrix) AddRows(i1, i2, dest int) {
+func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 	mat.checkRowBounds(dest)
@@ -332,10 +324,9 @@ func (mat *Matrix) AddRows(i1, i2, dest int) {
 			mat.rowIndices = append(mat.rowIndices, 0)
 			mat.colIndices = append(mat.colIndices, 0)
 		}
-		for i := colsLen - 1; i >= start1; i-- {
-			t := i + count
-			mat.rowIndices[t] = mat.rowIndices[i]
-			mat.colIndices[t] = mat.colIndices[i]
+		for i, t := len(mat.rowIndices)-1, len(mat.rowIndices)-1-count; i >= start1+colsLen; i, t = i-1, t-1 {
+			mat.rowIndices[i] = mat.rowIndices[t]
+			mat.colIndices[i] = mat.colIndices[t]
 		}
 	}
 
@@ -372,42 +363,13 @@ func insertOneElement(s []int, index int, value int) []int {
 	return s
 }
 
-func insertCount(s []int, index int, count int) []int {
-	for i := 0; i < count; i++ {
-		s = append(s, 0)
-	}
-	for i := len(s) - 1; i >= index; i-- {
-		s[i+count] = s[i]
-	}
-	//Note the values index to index+count are unchanged
-	return s
-}
-
-func insertRange(s []int, index int, vs []int) []int {
-	if n := len(s) + len(vs); n <= cap(s) {
-		s2 := s[:n]
-		copy(s2[index+len(vs):], s[index:])
-		copy(s2[index:], vs)
-		return s2
-	}
-	s2 := make([]int, len(s)+len(vs))
-	copy(s2, s[:index])
-	copy(s2[index:], vs)
-	copy(s2[index+len(vs):], s[index:])
-	return s2
-}
-
 func cutRange(a []int, start1 int, end1 int) []int {
 	copy(a[start1:], a[end1:])
 	a = a[:len(a)-(end1-start1)]
 	return a
 }
 
-func cutCount(a []int, index, count int) []int {
-	return cutRange(a, index, index+count)
-}
-
-func (mat *Matrix) at(r, c int) int {
+func (mat *CSRMatrix) at(r, c int) int {
 	start, end := findIndexRange(mat.rowIndices, r)
 
 	if start == end {
@@ -423,15 +385,15 @@ func (mat *Matrix) at(r, c int) int {
 }
 
 //Set sets the value at row index i and column index j to value.
-func (mat *Matrix) Set(i, j, value int) {
+func (mat *CSRMatrix) Set(i, j, value int) {
 	mat.checkRowBounds(i)
 	mat.checkColBounds(j)
 
-	mat.set(i, j, value)
+	mat.set(i, j, value%2)
 }
 
-func (mat *Matrix) set(r, c, value int) {
-	if value%2 == 0 {
+func (mat *CSRMatrix) set(r, c, value int) {
+	if value == 0 {
 		start, end := findIndexRange(mat.rowIndices, r)
 
 		if start == end {
@@ -465,33 +427,24 @@ func (mat *Matrix) set(r, c, value int) {
 }
 
 //T returns a new matrix that is the transpose of the underlying matrix.
-func (mat *Matrix) T() *Matrix {
-	matLen := len(mat.rowIndices)
-	csr := Matrix{
-		rows:       mat.cols,
-		cols:       mat.rows,
-		rowIndices: make([]int, 0, matLen),
-		colIndices: make([]int, 0, matLen),
+func (mat *CSRMatrix) T() SparseMat {
+	m := csrMat(mat.cols, mat.rows)
+
+	for i := 0; i < mat.cols; i++ {
+		m.SetRow(i, mat.Column(i))
 	}
 
-	for i := 0; i < matLen; i++ {
-		r := mat.rowIndices[i]
-		c := mat.colIndices[i]
-
-		csr.set(c, r, 1)
-	}
-
-	return &csr
+	return m
 }
 
 //Zeroize take the current matrix sets all values to 0.
-func (mat *Matrix) Zeroize() {
+func (mat *CSRMatrix) Zeroize() {
 	mat.rowIndices = make([]int, 0)
 	mat.colIndices = make([]int, 0)
 }
 
 //ZeroizeRange take the current matrix sets values inside the range to zero.
-func (mat *Matrix) ZeroizeRange(i, j, rows, cols int) {
+func (mat *CSRMatrix) ZeroizeRange(i, j, rows, cols int) {
 	if i < 0 || j < 0 || rows < 0 || cols < 0 {
 		panic("zeroize must have positive values")
 	}
@@ -502,7 +455,7 @@ func (mat *Matrix) ZeroizeRange(i, j, rows, cols int) {
 	mat.zeroize(i, j, rows, cols)
 }
 
-func (mat *Matrix) zeroize(r, c, rows, cols int) {
+func (mat *CSRMatrix) zeroize(r, c, rows, cols int) {
 	for i := r; i < r+rows; i++ {
 		for j := c; j < c+cols; j++ {
 			mat.set(i, j, 0)
@@ -511,7 +464,7 @@ func (mat *Matrix) zeroize(r, c, rows, cols int) {
 }
 
 //Mul multiplies two matrices and stores the values in this matrix.
-func (mat *Matrix) Mul(a, b *Matrix) {
+func (mat *CSRMatrix) Mul(a, b SparseMat) {
 	if a == nil || b == nil {
 		panic("multiply input was found to be nil")
 	}
@@ -520,63 +473,64 @@ func (mat *Matrix) Mul(a, b *Matrix) {
 		panic("multiply self assignment not allowed")
 	}
 
-	if a.cols != b.rows {
-		panic(fmt.Sprintf("multiply shape misalignment can't multiply (%v,%v)x(%v,%v)", a.rows, a.cols, b.rows, b.cols))
+	aRows, aCols := a.Dims()
+	bRows, bCols := b.Dims()
+
+	if aCols != bRows {
+		panic(fmt.Sprintf("multiply shape misalignment can't multiply (%v,%v)x(%v,%v)", aRows, aCols, bRows, bCols))
 	}
 
 	mRows, mCols := mat.Dims()
-	aRows, _ := a.Dims()
-	_, bCols := b.Dims()
 	if mRows != aRows || mCols != bCols {
-		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 
 	mat.mul(a, b)
 }
 
-func (mat *Matrix) mul(a, b *Matrix) {
+func (mat *CSRMatrix) mul(a, b SparseMat) {
 	//first we need to clear mat
-	mat.Zeroize()
-
 	for i := 0; i < mat.rows; i++ {
 		r := a.Row(i)
 		for j := 0; j < mat.cols; j++ {
 			c := b.Column(j)
 			d := r.Dot(c)
-			mat.set(i, j, d)
+			mat.set(i, j, d%2)
 		}
 	}
-
 }
 
 //Add stores the addition of a and b in this matrix.
-func (mat *Matrix) Add(a, b *Matrix) {
+func (mat *CSRMatrix) Add(a, b SparseMat) {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
 	}
 
-	if a.rows != b.rows || a.cols != b.cols {
-		panic(fmt.Sprintf("addition input mat shapes do not match a=(%v,%v) b=(%v,%v)", a.rows, a.cols, b.rows, b.cols))
+	aRows, aCols := a.Dims()
+	bRows, bCols := b.Dims()
+
+	if aRows != bRows || aCols != bCols {
+		panic(fmt.Sprintf("addition input mat shapes do not match a=(%v,%v) b=(%v,%v)", aRows, aCols, bRows, bCols))
 	}
-	if mat.rows != a.rows || mat.cols != a.cols {
-		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, a.cols))
+	if mat.rows != aRows || mat.cols != aCols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, aCols))
 	}
 
 	mat.add(a, b)
 }
 
-func (mat *Matrix) add(a, b *Matrix) {
+func (mat *CSRMatrix) add(a, b SparseMat) {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
-			aa := a.at(i, j)
-			bb := b.at(i, j)
-			mat.set(i, j, aa+bb)
+			aa := a.At(i, j)
+			bb := b.At(i, j)
+			mat.set(i, j, (aa+bb)%2)
 		}
 	}
 }
 
 //Column returns a map containing the non zero row indices as the keys and it's associated values.
-func (mat *Matrix) Column(j int) *Vector {
+func (mat *CSRMatrix) Column(j int) SparseVector {
 	mat.checkColBounds(j)
 
 	indices := make([]int, 0)
@@ -589,14 +543,14 @@ func (mat *Matrix) Column(j int) *Vector {
 	}
 	sort.Ints(indices)
 
-	return &Vector{
+	return &CSRVector{
 		length:  mat.rows,
 		indices: indices,
 	}
 }
 
 //SetColumn sets the values in column j. The values' keys are expected to be row indices.
-func (mat *Matrix) SetColumn(j int, vec *Vector) {
+func (mat *CSRMatrix) SetColumn(j int, vec SparseVector) {
 	mat.checkColBounds(j)
 
 	if mat.rows != vec.Len() {
@@ -604,37 +558,37 @@ func (mat *Matrix) SetColumn(j int, vec *Vector) {
 	}
 
 	for i := 0; i < mat.rows; i++ {
-		ii := vec.at(i)
+		ii := vec.At(i)
 		mat.set(i, j, ii)
 	}
 }
 
 //Row returns a map containing the non zero column indices as the keys and it's associated values.
-func (mat *Matrix) Row(i int) *Vector {
+func (mat *CSRMatrix) Row(i int) SparseVector {
 	mat.checkRowBounds(i)
 
 	start, end := findIndexRange(mat.rowIndices, i)
-	return &Vector{
+	return &CSRVector{
 		length:  mat.cols,
 		indices: mat.colIndices[start:end],
 	}
 }
 
 //SetRow sets the values in row i. The values' keys are expected to be column indices.
-func (mat *Matrix) SetRow(i int, vec *Vector) {
+func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
 	mat.checkColBounds(i)
 
-	if mat.cols != vec.length {
+	if mat.cols != vec.Len() {
 		panic("matrix number of columns must equal length of vector")
 	}
 
-	for j := 0; j < vec.length; j++ {
-		mat.set(i, j, vec.at(j))
+	for j := 0; j < vec.Len(); j++ {
+		mat.set(i, j, vec.At(j))
 	}
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.
-func (mat *Matrix) Equals(m *Matrix) bool {
+func (mat *CSRMatrix) Equals(m SparseMat) bool {
 	if mat == m {
 		return true
 	}
@@ -643,14 +597,24 @@ func (mat *Matrix) Equals(m *Matrix) bool {
 		return false
 	}
 
-	return mat.rows == m.rows &&
-		mat.cols == m.cols &&
-		reflect.DeepEqual(mat.rowIndices, m.rowIndices) &&
-		reflect.DeepEqual(mat.colIndices, m.colIndices)
+	r, c := m.Dims()
+
+	if mat.rows != r || mat.cols != c {
+		return false
+	}
+
+	for i := 0; i < mat.rows; i++ {
+		for j := 0; j < mat.cols; j++ {
+			if mat.at(i, j) != m.At(i, j) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 //String returns a string representation of this matrix.
-func (mat Matrix) String() string {
+func (mat CSRMatrix) String() string {
 	buff := &strings.Builder{}
 	table := tablewriter.NewWriter(buff)
 
@@ -673,118 +637,117 @@ func (mat Matrix) String() string {
 
 //SetMatrix replaces the values of this matrix with the values of from matrix a. The shape of 'a' must be less than or equal mat.
 // If the 'a' shape is less then iOffset and jOffset can be used to place 'a' matrix in a specific location.
-func (mat *Matrix) SetMatrix(a *Matrix, iOffset, jOffset int) {
+func (mat *CSRMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
 	if iOffset < 0 || jOffset < 0 {
 		panic("offsets must be positive values [0,+)")
 	}
-	if mat.rows < iOffset+a.rows || mat.cols < jOffset+a.cols {
-		panic(fmt.Sprintf("set matrix have equal or smaller shape (%v,%v), found a=(%v,%v)", mat.rows, mat.cols, iOffset+a.rows, jOffset+a.cols))
+	aRows, aCols := a.Dims()
+	if mat.rows < iOffset+aRows || mat.cols < jOffset+aCols {
+		panic(fmt.Sprintf("set matrix have equal or smaller shape (%v,%v), found a=(%v,%v)", mat.rows, mat.cols, iOffset+aRows, jOffset+aCols))
 	}
 
 	mat.setMatrix(a, iOffset, jOffset)
 }
 
-func (mat *Matrix) setMatrix(a *Matrix, rOffset, cOffset int) {
-	for i := 0; i < a.rows; i++ {
-		for j := 0; j < a.cols; j++ {
-			mat.set(rOffset+i, cOffset+j, a.at(i, j))
+func (mat *CSRMatrix) setMatrix(a SparseMat, rOffset, cOffset int) {
+	aRows, aCols := a.Dims()
+	for i := 0; i < aRows; i++ {
+		for j := 0; j < aCols; j++ {
+			mat.set(rOffset+i, cOffset+j, a.At(i, j))
 		}
 	}
 }
 
 //Negate performs a piecewise logical negation.
-func (mat *Matrix) Negate() {
+func (mat *CSRMatrix) Negate() {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
-			mat.set(i, j, mat.at(i, j)+1)
+			mat.set(i, j, (mat.at(i, j)+1)%2)
 		}
 	}
 }
 
 //And executes a piecewise logical AND on the two matrices and stores the values in this matrix.
-func (mat *Matrix) And(a, b *Matrix) {
+func (mat *CSRMatrix) And(a, b SparseMat) {
 	if a == nil || b == nil {
 		panic("AND input was found to be nil")
 	}
 
-	if mat == a || mat == b {
-		panic("AND self assignment not allowed")
+	aRows, aCols := a.Dims()
+	bRows, bCols := b.Dims()
+
+	if aRows != bRows || aCols != bCols {
+		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", aRows, aCols, bRows, bCols))
 	}
 
-	if a.rows != b.rows || a.cols != b.cols {
-		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
-	}
-
-	if mat.rows != a.rows || mat.cols != a.cols {
-		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	if mat.rows != aRows || mat.cols != aCols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 
 	mat.and(a, b)
 }
 
-func (mat *Matrix) and(a, b *Matrix) {
+func (mat *CSRMatrix) and(a, b SparseMat) {
 	//first we need to clear mat
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
-			mat.set(i, j, a.at(i, j)&b.at(i, j))
+			mat.set(i, j, a.At(i, j)&b.At(i, j))
 		}
 	}
 }
 
 //Or executes a piecewise logical OR on the two matrices and stores the values in this matrix.
-func (mat *Matrix) Or(a, b *Matrix) {
+func (mat *CSRMatrix) Or(a, b SparseMat) {
 	if a == nil || b == nil {
 		panic("OR input was found to be nil")
 	}
 
-	if mat == a || mat == b {
-		panic("OR self assignment not allowed")
+	aRows, aCols := a.Dims()
+	bRows, bCols := b.Dims()
+
+	if aRows != bRows || aCols != bCols {
+		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", aRows, aCols, bRows, bCols))
 	}
 
-	if a.rows != b.rows || a.cols != b.cols {
-		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
-	}
-
-	if mat.rows != a.rows || mat.cols != a.cols {
-		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	if mat.rows != aRows || mat.cols != aCols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 
 	mat.or(a, b)
 }
 
-func (mat *Matrix) or(a, b *Matrix) {
+func (mat *CSRMatrix) or(a, b SparseMat) {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
-			mat.set(i, j, a.at(i, j)|b.at(i, j))
+			mat.set(i, j, a.At(i, j)|b.At(i, j))
 		}
 	}
 }
 
 //XOr executes a piecewise logical XOR on the two matrices and stores the values in this matrix.
-func (mat *Matrix) XOr(a, b *Matrix) {
+func (mat *CSRMatrix) XOr(a, b SparseMat) {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
 	}
 
-	if mat == a || mat == b {
-		panic("XOR self assignment not allowed")
+	aRows, aCols := a.Dims()
+	bRows, bCols := b.Dims()
+
+	if aRows != bRows || aCols != bCols {
+		panic(fmt.Sprintf("XOR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", aRows, aCols, bRows, bCols))
 	}
 
-	if a.rows != b.rows || a.cols != b.cols {
-		panic(fmt.Sprintf("XOR shape misalignment both inputs must be equal found (%v,%v) and (%v,%v)", a.rows, a.cols, b.rows, b.cols))
-	}
-
-	if mat.rows != a.rows || mat.cols != a.cols {
-		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, a.rows, b.cols))
+	if mat.rows != aRows || mat.cols != aCols {
+		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 
 	mat.xor(a, b)
 }
 
-func (mat *Matrix) xor(a, b *Matrix) {
+func (mat *CSRMatrix) xor(a, b SparseMat) {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
-			mat.set(i, j, a.at(i, j)^b.at(i, j))
+			mat.set(i, j, a.At(i, j)^b.At(i, j))
 		}
 	}
 }

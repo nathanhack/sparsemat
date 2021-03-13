@@ -1,4 +1,4 @@
-package csr
+package sparsemat
 
 import (
 	"encoding/json"
@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func TestVector_Add(t *testing.T) {
+func TestDOKVector_Add(t *testing.T) {
 	tests := []struct {
-		a, b, result *Vector
-		expected     *Vector
+		a, b, result SparseVector
+		expected     SparseVector
 	}{
-		{NewVec(3, 0, 1, 0), NewVec(3, 1, 0, 0), NewVec(3), NewVec(3, 1, 1, 0)},
+		{DOKVec(3, 0, 1, 0), DOKVec(3, 1, 0, 0), DOKVec(3), DOKVec(3, 1, 1, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -24,13 +24,13 @@ func TestVector_Add(t *testing.T) {
 	}
 }
 
-func TestVector_Dot(t *testing.T) {
+func TestDOKVector_Dot(t *testing.T) {
 	tests := []struct {
-		a, b     *Vector
+		a, b     SparseVector
 		expected int
 	}{
-		{NewVec(3, 1, 1, 1), NewVec(3, 1, 1, 1), 1},
-		{NewVec(3, 1, 0, 1), NewVec(3, 1, 1, 1), 0},
+		{DOKVec(3, 1, 1, 1), DOKVec(3, 1, 1, 1), 1},
+		{DOKVec(3, 1, 0, 1), DOKVec(3, 1, 1, 1), 0},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -42,18 +42,18 @@ func TestVector_Dot(t *testing.T) {
 	}
 }
 
-func TestVector_Mul(t *testing.T) {
+func TestDOKVector_Mul(t *testing.T) {
 	tests := []struct {
-		a        *Vector
-		b        *Matrix
-		result   *Vector
-		expected *Vector
+		a        SparseVector
+		b        SparseMat
+		result   SparseVector
+		expected SparseVector
 	}{
-		{NewVec(3, 1, 0, 1), Identity(3), NewVec(3), NewVec(3, 1, 0, 1)},
+		{DOKVec(3, 1, 0, 1), DOKIdentity(3), DOKVec(3), DOKVec(3, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			test.result.Mul(test.a, test.b)
+			test.result.MulMat(test.a, test.b)
 			if !test.result.Equals(test.expected) {
 				t.Fatalf("expected %v but found %v", test.expected, test.result)
 			}
@@ -61,15 +61,15 @@ func TestVector_Mul(t *testing.T) {
 	}
 }
 
-func TestVector_Equals(t *testing.T) {
+func TestDOKVector_Equals(t *testing.T) {
 	tests := []struct {
-		a, b     *Vector
+		a, b     SparseVector
 		expected bool
 	}{
-		//{NewVec(3), NewVec(3), true},
-		{NewVec(3), NewVec(4), false},
-		{NewVec(3, 1, 0, 1), NewVec(3), false},
-		{NewVec(3, 1, 0, 1), NewVec(3, 1, 0, 1), true},
+		{DOKVec(3), DOKVec(3), true},
+		{DOKVec(3), DOKVec(4), false},
+		{DOKVec(3, 1, 0, 1), DOKVec(3), false},
+		{DOKVec(3, 1, 0, 1), DOKVec(3, 1, 0, 1), true},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -80,12 +80,12 @@ func TestVector_Equals(t *testing.T) {
 	}
 }
 
-func TestVector_Set(t *testing.T) {
+func TestDOKVector_Set(t *testing.T) {
 	tests := []struct {
-		source, result *Vector
+		source, result SparseVector
 	}{
-		{NewVec(5, 1, 0, 1, 0, 1), NewVec(5)},
-		{Identity(5).Row(2), NewVec(5)},
+		{DOKVec(5, 1, 0, 1, 0, 1), DOKVec(5)},
+		{DOKIdentity(5).Row(2), DOKVec(5)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -100,31 +100,19 @@ func TestVector_Set(t *testing.T) {
 	}
 }
 
-func TestVector_Set2(t *testing.T) {
-	m := NewMat(5, 5)
-	for i := 0; i < 5; i++ {
-		m.set(i, i, 1)
-	}
-
-	expected := NewMat(5, 5, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1)
-
-	if !expected.Equals(m) {
-		t.Fatalf("expected %v but found %v", expected, m)
-	}
-}
-
-func TestVector_SetVec(t *testing.T) {
+func TestDOKVector_SetVec(t *testing.T) {
 	tests := []struct {
-		original         *Vector
-		setToSlice       *Vector
+		original         SparseVector
+		setToSlice       SparseVector
 		index            int
-		expectedOriginal *Vector
+		expectedOriginal SparseVector
 	}{
-		{NewVec(5, 1, 1, 1, 1, 1), NewVec(3, 0, 1, 0), 1, NewVec(5, 1, 0, 1, 0, 1)},
+		{DOKVec(5, 1, 1, 1, 1, 1), DOKVec(3, 0, 1, 0), 1, DOKVec(5, 1, 0, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			test.original.SetVec(test.setToSlice, test.index)
+
 			if !test.original.Equals(test.expectedOriginal) {
 				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedOriginal, test.original)
 			}
@@ -132,13 +120,13 @@ func TestVector_SetVec(t *testing.T) {
 	}
 }
 
-func TestVector_NonzeroValues(t *testing.T) {
+func TestDOKVector_NonzeroValues(t *testing.T) {
 	tests := []struct {
-		input    *Vector
+		input    SparseVector
 		expected map[int]int
 	}{
-		{Identity(4).Row(2), map[int]int{2: 1}},
-		{NewMat(4, 6, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1).Row(0), map[int]int{0: 1, 1: 1, 3: 1}},
+		{DOKIdentity(4).Row(2), map[int]int{2: 1}},
+		{DOKMat(4, 6, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1).Row(0), map[int]int{0: 1, 1: 1, 3: 1}},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -150,15 +138,15 @@ func TestVector_NonzeroValues(t *testing.T) {
 	}
 }
 
-func TestVector_Slice(t *testing.T) {
+func TestDOKVector_Slice(t *testing.T) {
 	tests := []struct {
-		original         *Vector
+		original         SparseVector
 		i, len           int
-		addToSlice       *Vector
-		expectedOriginal *Vector
-		expectedSlice    *Vector
+		addToSlice       SparseVector
+		expectedOriginal SparseVector
+		expectedSlice    SparseVector
 	}{
-		{NewVec(5, 1, 0, 1, 0, 1), 1, 3, NewVec(3, 1, 1, 1), NewVec(5, 1, 1, 0, 1, 1), NewVec(3, 1, 0, 1)},
+		{DOKVec(5, 1, 0, 1, 0, 1), 1, 3, DOKVec(3, 1, 1, 1), DOKVec(5, 1, 1, 0, 1, 1), DOKVec(3, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -171,14 +159,14 @@ func TestVector_Slice(t *testing.T) {
 	}
 }
 
-func TestVector_Slice2(t *testing.T) {
+func TestDOKVector_Slice2(t *testing.T) {
 	tests := []struct {
-		original      *Vector
+		original      SparseVector
 		i1, len1      int
 		i2, len2      int
-		expectedSlice *Vector
+		expectedSlice SparseVector
 	}{
-		{NewVec(7, 0, 0, 1, 0, 1, 0, 0), 1, 5, 1, 3, NewVec(3, 1, 0, 1)},
+		{DOKVec(7, 0, 0, 1, 0, 1, 0, 0), 1, 5, 1, 3, DOKVec(3, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -192,12 +180,12 @@ func TestVector_Slice2(t *testing.T) {
 	}
 }
 
-func TestVector_And(t *testing.T) {
+func TestDOKVector_And(t *testing.T) {
 	tests := []struct {
-		x, y, result, expected *Vector
+		x, y, result, expected SparseVector
 	}{
-		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 0, 0, 1)},
-		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 0, 0, 1)},
+		{DOKVec(4, 0, 1, 0, 1), DOKVec(4, 0, 0, 1, 1), DOKVec(4), DOKVec(4, 0, 0, 0, 1)},
+		{DOKVec(4, 0, 0, 1, 1), DOKVec(4, 0, 1, 0, 1), DOKVec(4), DOKVec(4, 0, 0, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -209,12 +197,12 @@ func TestVector_And(t *testing.T) {
 	}
 }
 
-func TestVector_Or(t *testing.T) {
+func TestDOKVector_Or(t *testing.T) {
 	tests := []struct {
-		x, y, result, expected *Vector
+		x, y, result, expected SparseVector
 	}{
-		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 1, 1, 1)},
-		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 1, 1, 1)},
+		{DOKVec(4, 0, 1, 0, 1), DOKVec(4, 0, 0, 1, 1), DOKVec(4), DOKVec(4, 0, 1, 1, 1)},
+		{DOKVec(4, 0, 0, 1, 1), DOKVec(4, 0, 1, 0, 1), DOKVec(4), DOKVec(4, 0, 1, 1, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -226,12 +214,12 @@ func TestVector_Or(t *testing.T) {
 	}
 }
 
-func TestVector_XOr(t *testing.T) {
+func TestDOKVector_XOr(t *testing.T) {
 	tests := []struct {
-		x, y, result, expected *Vector
+		x, y, result, expected SparseVector
 	}{
-		{NewVec(4, 0, 1, 0, 1), NewVec(4, 0, 0, 1, 1), NewVec(4), NewVec(4, 0, 1, 1, 0)},
-		{NewVec(4, 0, 0, 1, 1), NewVec(4, 0, 1, 0, 1), NewVec(4), NewVec(4, 0, 1, 1, 0)},
+		{DOKVec(4, 0, 1, 0, 1), DOKVec(4, 0, 0, 1, 1), DOKVec(4), DOKVec(4, 0, 1, 1, 0)},
+		{DOKVec(4, 0, 0, 1, 1), DOKVec(4, 0, 1, 0, 1), DOKVec(4), DOKVec(4, 0, 1, 1, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -243,12 +231,12 @@ func TestVector_XOr(t *testing.T) {
 	}
 }
 
-func TestVector_Negate(t *testing.T) {
+func TestDOKVector_Negate(t *testing.T) {
 	tests := []struct {
-		x, expected *Vector
+		x, expected SparseVector
 	}{
-		{NewVec(4, 0, 1, 0, 1), NewVec(4, 1, 0, 1, 0)},
-		{NewVec(4, 0, 0, 1, 1), NewVec(4, 1, 1, 0, 0)},
+		{DOKVec(4, 0, 1, 0, 1), DOKVec(4, 1, 0, 1, 0)},
+		{DOKVec(4, 0, 0, 1, 1), DOKVec(4, 1, 1, 0, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -260,20 +248,36 @@ func TestVector_Negate(t *testing.T) {
 	}
 }
 
-func TestVector_JSON(t *testing.T) {
-	v := NewVec(5, 1, 0, 1, 0, 1)
+func TestDOKVector_JSON(t *testing.T) {
+	v := DOKVec(5, 1, 0, 1, 0, 1)
 
 	bs, err := json.Marshal(v)
 	if err != nil {
 		t.Fatalf("expected no error found:%v", err)
 	}
 
-	var actual Vector
+	var actual DOKVector
 	err = json.Unmarshal(bs, &actual)
 	if err != nil {
 		t.Fatalf("expected no error found:%v", err)
 	}
 	if !v.Equals(&actual) {
 		t.Fatalf("expected %v but found %v", v, actual)
+	}
+}
+
+func TestDOKVecCopy(t *testing.T) {
+	tests := []struct {
+		vec SparseVector
+	}{
+		{DOKVec(5, 1, 0, 1, 0, 1)},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			actual := DOKVecCopy(test.vec)
+			if !actual.Equals(test.vec) {
+				t.Fatalf("expected %v but foudn %v", test.vec, actual)
+			}
+		})
 	}
 }
