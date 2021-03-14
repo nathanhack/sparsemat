@@ -151,17 +151,13 @@ func (vec *CSRVector) Len() int {
 }
 
 func (vec *CSRVector) Dot(a SparseVector) int {
-	min := vec.length
-	if min > a.Len() {
-		min = a.Len()
+	vec.checkBounds(a.Len() - 1)
+
+	v := 0
+	for _, i := range vec.indices {
+		v += a.At(i)
 	}
-	sum := 0
-	for i := 0; i < min; i++ {
-		j := vec.at(i)
-		k := a.At(i)
-		sum += j * k
-	}
-	return sum % 2
+	return v % 2
 }
 
 func (vec *CSRVector) NonzeroValues() (indexToValues map[int]int) {

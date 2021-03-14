@@ -2,6 +2,7 @@ package sparsemat
 
 import (
 	"encoding/json"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"testing"
@@ -278,5 +279,24 @@ func TestCSRVecCopy(t *testing.T) {
 				t.Fatalf("expected %v but foudn %v", test.vec, actual)
 			}
 		})
+	}
+}
+
+func BenchmarkCSRVector_Dot(b *testing.B) {
+	data1 := make([]int, 100)
+	data2 := make([]int, 100)
+
+	for i := 0; i < 100; i++ {
+		data1[i] = rand.Intn(2)
+		data2[i] = rand.Intn(2)
+	}
+
+	a := CSRVec(len(data1), data1...)
+	aa := CSRVec(len(data2), data2...)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		a.Dot(a)
+		a.Dot(aa)
+		aa.Dot(a)
 	}
 }
