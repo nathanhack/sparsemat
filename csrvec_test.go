@@ -140,18 +140,15 @@ func TestCSRVector_NonzeroValues(t *testing.T) {
 
 func TestCSRVector_Slice(t *testing.T) {
 	tests := []struct {
-		original         SparseVector
-		i, len           int
-		addToSlice       SparseVector
-		expectedOriginal SparseVector
-		expectedSlice    SparseVector
+		original      SparseVector
+		i, len        int
+		expectedSlice SparseVector
 	}{
-		{CSRVec(5, 1, 0, 1, 0, 1), 1, 3, CSRVec(3, 1, 1, 1), CSRVec(5, 1, 1, 0, 1, 1), CSRVec(3, 1, 0, 1)},
+		{CSRVec(5, 1, 0, 1, 0, 1), 1, 3, CSRVec(3, 0, 1, 0)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			sl := test.original.Slice(test.i, test.len)
-			sl.Add(sl, test.addToSlice)
 			if !sl.Equals(test.expectedSlice) {
 				t.Fatalf("expected \n%v\n but found \n%v\n", test.expectedSlice, sl)
 			}
@@ -298,5 +295,24 @@ func BenchmarkCSRVector_Dot(b *testing.B) {
 		a.Dot(a)
 		a.Dot(aa)
 		aa.Dot(a)
+	}
+}
+
+func BenchmarkCSRVector_MulMat(b *testing.B) {
+	data := make([]int, 100)
+	data1 := make([]int, 10)
+
+	for i := 0; i < len(data); i++ {
+		data[i] = rand.Intn(2)
+	}
+	for i := 0; i < len(data1); i++ {
+		data1[i] = rand.Intn(2)
+	}
+	m := CSRMat(10, 10, data...)
+	v := CSRVec(10, data1...)
+	org := CSRVec(10)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		org.MulMat(v, m)
 	}
 }

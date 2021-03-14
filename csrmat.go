@@ -533,15 +533,17 @@ func (mat *CSRMatrix) add(a, b SparseMat) {
 func (mat *CSRMatrix) Column(j int) SparseVector {
 	mat.checkColBounds(j)
 
-	indices := make([]int, 0)
+	indices := make([]int, mat.rows)
 
+	ii := 0
 	for i, c := range mat.colIndices {
 		if c == j {
 			r := mat.rowIndices[i]
-			indices = append(indices, r)
+			indices[ii] = r
+			ii++
 		}
 	}
-	sort.Ints(indices)
+	indices = indices[:ii]
 
 	return &CSRVector{
 		length:  mat.rows,

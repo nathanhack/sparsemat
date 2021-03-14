@@ -163,6 +163,7 @@ func (vec *DOKVector) Slice(i, length int) SparseVector {
 		panic("slice len must >0")
 	}
 	vec.checkBounds(i)
+	vec.checkBounds(i + length - 1)
 
 	tmp := make(map[int]int)
 

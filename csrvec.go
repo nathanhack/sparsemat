@@ -116,30 +116,38 @@ func (vec *CSRVector) at(j int) int {
 //Set sets the value at row index i and column index j to value.
 func (vec *CSRVector) Set(i, value int) {
 	vec.checkBounds(i)
-	vec.set(i, value)
+	vec.set(i, value%2)
 }
 
 func (vec *CSRVector) set(j, value int) {
 	x := findIndex(vec.indices, j)
+	indiceLen := len(vec.indices)
 	// if value is zero we remove it from the structure
-	if value%2 == 0 {
+	if value == 0 {
 		// if there was a value there then remove it
-		if x != len(vec.indices) && vec.indices[x] == j {
-			vec.indices = cutRange(vec.indices, x, x+1)
+		if x != indiceLen && vec.indices[x] == j {
+			for i := x; i < indiceLen-1; i++ {
+				vec.indices[i] = vec.indices[i+1]
+			}
+			vec.indices = vec.indices[:indiceLen-1]
 		}
 		return
 	}
 	//else the value should be in the structure
-	if 0 == len(vec.indices) || x == len(vec.indices) || vec.indices[x] != j {
-		//if there isn't a value already there
-		vec.indices = insertOneElement(vec.indices, x, j)
+	if 0 == indiceLen || x == indiceLen || vec.indices[x] != j {
+		//if there isn't a value already there we add it
+		vec.indices = append(vec.indices, 0)
+		for i := indiceLen - 1; i > x; i-- {
+			vec.indices[i] = vec.indices[i-1]
+		}
+		vec.indices[x] = j
 	}
 }
 
 //SetVec replaces the values of this vector with the values of from vector a.
 func (vec *CSRVector) SetVec(a SparseVector, i int) {
 	vec.checkBounds(i)
-	vec.checkBounds(a.Len() + i)
+	vec.checkBounds(a.Len() - 1 + i)
 
 	for ii := 0; ii < a.Len(); ii++ {
 		vec.set(ii+i, a.At(ii))
@@ -177,7 +185,7 @@ func (vec *CSRVector) Slice(i, length int) SparseVector {
 	}
 
 	vec.checkBounds(i)
-	vec.checkBounds(i + length)
+	vec.checkBounds(i + length - 1)
 
 	v := &CSRVector{
 		length:  length,

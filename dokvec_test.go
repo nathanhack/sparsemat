@@ -301,3 +301,22 @@ func BenchmarkDOKVector_Dot(b *testing.B) {
 		aa.Dot(a)
 	}
 }
+
+func BenchmarkDOKVector_MulMat(b *testing.B) {
+	data := make([]int, 100)
+	data1 := make([]int, 10)
+
+	for i := 0; i < len(data); i++ {
+		data[i] = rand.Intn(2)
+	}
+	for i := 0; i < len(data1); i++ {
+		data1[i] = rand.Intn(2)
+	}
+	m := DOKMat(10, 10, data...)
+	v := DOKVec(10, data1...)
+	org := DOKVec(10)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		org.MulMat(v, m)
+	}
+}
