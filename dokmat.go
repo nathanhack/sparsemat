@@ -314,8 +314,11 @@ func (mat *DOKMatrix) set(r, c, value int) {
 func (mat *DOKMatrix) T() SparseMat {
 	m := dokMat(mat.cols, mat.rows)
 
-	for i := 0; i < mat.cols; i++ {
-		m.SetRow(i, mat.Column(i))
+	for i, cols := range mat.rowValues {
+		for j := range cols {
+			m.rowValues[j][i] = 1
+			m.colValues[i][j] = 1
+		}
 	}
 
 	return m

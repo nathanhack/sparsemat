@@ -430,8 +430,8 @@ func (mat *CSRMatrix) set(r, c, value int) {
 func (mat *CSRMatrix) T() SparseMat {
 	m := csrMat(mat.cols, mat.rows)
 
-	for i := 0; i < mat.cols; i++ {
-		m.SetRow(i, mat.Column(i))
+	for i := 0; i < len(mat.rowIndices); i++ {
+		m.set(mat.colIndices[i], mat.rowIndices[i], 1)
 	}
 
 	return m

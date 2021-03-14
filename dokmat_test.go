@@ -2,6 +2,7 @@ package sparsemat
 
 import (
 	"encoding/json"
+	"math/rand"
 	"strconv"
 	"testing"
 )
@@ -630,6 +631,18 @@ func TestDOKMatrix_Set(t *testing.T) {
 
 	if !expected.Equals(m) {
 		t.Fatalf("expected %v but found %v", expected, m)
+	}
+}
+
+func BenchmarkDOKMatrix_T(b *testing.B) {
+	data := make([]int, 100)
+	for i := 0; i < len(data); i++ {
+		data[i] = rand.Intn(2)
+	}
+	m := DOKMat(10, 10, data...)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		m.T()
 	}
 }
 
