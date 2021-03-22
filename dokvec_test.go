@@ -83,19 +83,21 @@ func TestDOKVector_Equals(t *testing.T) {
 
 func TestDOKVector_Set(t *testing.T) {
 	tests := []struct {
-		source, result SparseVector
+		input  SparseVector
+		index  int
+		value  int
+		result SparseVector
 	}{
-		{DOKVec(5, 1, 0, 1, 0, 1), DOKVec(5)},
-		{DOKIdentity(5).Row(2), DOKVec(5)},
+		{DOKVec(5, 1, 0, 1, 0, 1), 0, 0, DOKVec(5, 0, 0, 1, 0, 1)},
+		{DOKVec(5, 1, 0, 1, 0, 1), 1, 1, DOKVec(5, 1, 1, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			for i := 0; i < test.source.Len(); i++ {
-				test.result.Set(i, test.source.At(i))
-			}
 
-			if !test.source.Equals(test.result) {
-				t.Fatalf("expected %v but found %v", test.source, test.result)
+			test.input.Set(test.index, test.value)
+
+			if !test.input.Equals(test.result) {
+				t.Fatalf("expected %v but found %v", test.input, test.result)
 			}
 		})
 	}

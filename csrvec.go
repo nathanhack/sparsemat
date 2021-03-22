@@ -137,7 +137,7 @@ func (vec *CSRVector) set(j, value int) {
 	if 0 == indiceLen || x == indiceLen || vec.indices[x] != j {
 		//if there isn't a value already there we add it
 		vec.indices = append(vec.indices, 0)
-		for i := indiceLen - 1; i > x; i-- {
+		for i := indiceLen; i > x; i-- {
 			vec.indices[i] = vec.indices[i-1]
 		}
 		vec.indices[x] = j

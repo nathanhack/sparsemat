@@ -83,19 +83,20 @@ func TestCSRVector_Equals(t *testing.T) {
 
 func TestCSRVector_Set(t *testing.T) {
 	tests := []struct {
-		source, result SparseVector
+		input  SparseVector
+		index  int
+		value  int
+		result SparseVector
 	}{
-		{CSRVec(5, 1, 0, 1, 0, 1), CSRVec(5)},
-		{CSRIdentity(5).Row(2), CSRVec(5)},
+		{CSRVec(5, 1, 0, 1, 0, 1), 0, 0, CSRVec(5, 0, 0, 1, 0, 1)},
+		{CSRVec(5, 1, 0, 1, 0, 1), 1, 1, CSRVec(5, 1, 1, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			for i := 0; i < test.source.Len(); i++ {
-				test.result.Set(i, test.source.At(i))
-			}
+			test.input.Set(test.index, test.value)
 
-			if !test.source.Equals(test.result) {
-				t.Fatalf("expected %v but found %v", test.source, test.result)
+			if !test.input.Equals(test.result) {
+				t.Fatalf("expected %v but found %v", test.input, test.result)
 			}
 		})
 	}
