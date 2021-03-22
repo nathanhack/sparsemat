@@ -20,6 +20,7 @@ type SparseVector interface {
 	XOr(a, b SparseVector)
 	Negate()
 	IsZero() bool
+	HammingWeight() int
 }
 
 type SparseMat interface {

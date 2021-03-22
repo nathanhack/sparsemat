@@ -348,3 +348,7 @@ func (vec *CSRVector) Negate() {
 func (vec *CSRVector) IsZero() bool {
 	return len(vec.indices) == 0
 }
+
+func (vec *CSRVector) HammingWeight() int {
+	return len(vec.indices)
+}

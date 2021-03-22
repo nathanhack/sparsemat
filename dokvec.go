@@ -320,3 +320,7 @@ func (vec *DOKVector) Negate() {
 func (vec *DOKVector) IsZero() bool {
 	return len(vec.values) == 0
 }
+
+func (vec *DOKVector) HammingWeight() int {
+	return len(vec.values)
+}
