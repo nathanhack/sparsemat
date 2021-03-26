@@ -292,13 +292,16 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 		tmp[r] += 1
 	}
 
-	cols := make([]int, 0, len(tmp))
-
+	cols := make([]int, len(tmp))
+	index := 0
 	for c, v := range tmp {
 		if v%2 == 1 {
-			cols = append(cols, c)
+			cols[index] = c
+			index++
 		}
 	}
+	cols = cols[:index]
+
 	sort.Ints(cols)
 	colsLen := len(cols)
 
@@ -310,8 +313,7 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 		//it's too big we'll cut it down to size
 		count := diff - colsLen
 		rowLen := len(mat.rowIndices)
-		for i := start1 + count; i < rowLen; i++ {
-			iCount := i - count
+		for i, iCount := start1+count, start1; i < rowLen; i, iCount = i+1, iCount+1 {
 			mat.rowIndices[iCount] = mat.rowIndices[i]
 			mat.colIndices[iCount] = mat.colIndices[i]
 		}
@@ -324,14 +326,14 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 			mat.rowIndices = append(mat.rowIndices, 0)
 			mat.colIndices = append(mat.colIndices, 0)
 		}
-		for i, t := len(mat.rowIndices)-1, len(mat.rowIndices)-1-count; i >= start1+colsLen; i, t = i-1, t-1 {
+		ri := len(mat.rowIndices)
+		for i, t := ri-1, ri-1-count; i >= start1+colsLen; i, t = i-1, t-1 {
 			mat.rowIndices[i] = mat.rowIndices[t]
 			mat.colIndices[i] = mat.colIndices[t]
 		}
 	}
 
-	for i := 0; i < colsLen; i++ {
-		t := start1 + i
+	for i, t := 0, start1; i < colsLen; i, t = i+1, t+1 {
 		mat.rowIndices[t] = dest
 		mat.colIndices[t] = cols[i]
 	}

@@ -324,3 +324,17 @@ func (vec *DOKVector) IsZero() bool {
 func (vec *DOKVector) HammingWeight() int {
 	return len(vec.values)
 }
+
+func (vec *DOKVector) HammingDistance(a SparseVector) int {
+	if vec.length != a.Len() {
+		panic("HammingDistance() vectors must be same length")
+	}
+
+	count := 0
+	for i := 0; i < vec.length; i++ {
+		if vec.at(i) != a.At(i) {
+			count++
+		}
+	}
+	return count
+}

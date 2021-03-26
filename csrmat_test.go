@@ -560,6 +560,16 @@ func TestCSRMatrix_SwapColumns(t *testing.T) {
 	}
 }
 
+func BenchmarkCSRMatrix_SwapColumns(b *testing.B) {
+	m := CSRMat(5, 5, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		m.SwapColumns(2, 3)
+		m.SwapColumns(2, 3)
+	}
+}
+
 func TestCSRMatrix_AddRows(t *testing.T) {
 	tests := []struct {
 		input        SparseMat

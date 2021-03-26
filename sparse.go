@@ -1,52 +1,53 @@
 package sparsemat
 
 type SparseVector interface {
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON(bytes []byte) error
-	String() string
+	Add(a, b SparseVector)
+	And(a, b SparseVector)
 	At(i int) int
+	Dot(a SparseVector) int
+	Equals(v SparseVector) bool
+	HammingDistance(a SparseVector) int
+	HammingWeight() int
+	IsZero() bool
+	Len() int
+	MarshalJSON() ([]byte, error)
+	MatMul(mat SparseMat, vec SparseVector)
+	MulMat(vec SparseVector, mat SparseMat)
+	Negate()
+	NonzeroValues() (indexToValues map[int]int)
+	Or(a, b SparseVector)
 	Set(i, value int)
 	SetVec(a SparseVector, i int)
-	Len() int
-	Dot(a SparseVector) int
-	NonzeroValues() (indexToValues map[int]int)
 	Slice(i, length int) SparseVector
-	Add(a, b SparseVector)
-	Equals(v SparseVector) bool
-	MulMat(vec SparseVector, mat SparseMat)
-	MatMul(mat SparseMat, vec SparseVector)
-	And(a, b SparseVector)
-	Or(a, b SparseVector)
+	String() string
 	XOr(a, b SparseVector)
-	Negate()
-	IsZero() bool
-	HammingWeight() int
+	UnmarshalJSON(bytes []byte) error
 }
 
 type SparseMat interface {
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON(bytes []byte) error
-	Slice(i, j, rows, cols int) SparseMat
-	Dims() (int, int)
+	Add(a, b SparseMat)
+	AddRows(i1, i2, dest int)
+	And(a, b SparseMat)
 	At(i, j int) int
+	Column(j int) SparseVector
+	Dims() (int, int)
+	Equals(m SparseMat) bool
+	MarshalJSON() ([]byte, error)
+	Mul(a, b SparseMat)
+	Negate()
+	Or(a, b SparseMat)
+	Row(i int) SparseVector
+	Set(i, j, value int)
+	SetColumn(j int, vec SparseVector)
+	SetMatrix(a SparseMat, iOffset, jOffset int)
+	SetRow(i int, vec SparseVector)
+	Slice(i, j, rows, cols int) SparseMat
+	String() string
 	SwapRows(i1, i2 int)
 	SwapColumns(j1, j2 int)
-	AddRows(i1, i2, dest int)
-	Set(i, j, value int)
 	T() SparseMat
+	UnmarshalJSON(bytes []byte) error
+	XOr(a, b SparseMat)
 	Zeroize()
 	ZeroizeRange(i, j, rows, cols int)
-	Mul(a, b SparseMat)
-	Add(a, b SparseMat)
-	Column(j int) SparseVector
-	SetColumn(j int, vec SparseVector)
-	Row(i int) SparseVector
-	SetRow(i int, vec SparseVector)
-	Equals(m SparseMat) bool
-	String() string
-	SetMatrix(a SparseMat, iOffset, jOffset int)
-	Negate()
-	And(a, b SparseMat)
-	Or(a, b SparseMat)
-	XOr(a, b SparseMat)
 }
