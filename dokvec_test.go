@@ -304,21 +304,36 @@ func TestDOKVecCopy(t *testing.T) {
 }
 
 func BenchmarkDOKVector_Dot(b *testing.B) {
-	data1 := make([]int, 100)
-	data2 := make([]int, 100)
-
-	for i := 0; i < 100; i++ {
-		data1[i] = rand.Intn(2)
-		data2[i] = rand.Intn(2)
+	benchmarks := []struct {
+		size int
+	}{
+		{0},
+		{1},
+		{2},
+		{3},
+		{4},
+		{5},
+		{1000},
 	}
+	for ti, bm := range benchmarks {
+		b.Run(strconv.Itoa(ti), func(b *testing.B) {
+			data1 := make([]int, bm.size)
+			data2 := make([]int, bm.size)
 
-	a := DOKVec(len(data1), data1...)
-	aa := DOKVec(len(data2), data2...)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		a.Dot(a)
-		a.Dot(aa)
-		aa.Dot(a)
+			for j := 0; j < bm.size; j++ {
+				data1[j] = rand.Intn(2)
+				data2[j] = rand.Intn(2)
+			}
+
+			a := DOKVec(len(data1), data1...)
+			aa := DOKVec(len(data2), data2...)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				a.Dot(a)
+				a.Dot(aa)
+				aa.Dot(a)
+			}
+		})
 	}
 }
 

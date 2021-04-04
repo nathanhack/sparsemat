@@ -150,12 +150,26 @@ func (vec *CSRVector) Len() int {
 }
 
 func (vec *CSRVector) Dot(a SparseVector) int {
-	vec.checkBounds(a.Len() - 1)
+	if vec.length != a.Len() {
+		panic("lengths must be equal")
+	}
 
 	v := 0
-	for _, i := range vec.indices {
-		v += a.At(i)
+	indices := a.NonzeroArray()
+	vecLen := len(vec.indices)
+	aLen := len(indices)
+	for i, j := 0, 0; i < vecLen && j < aLen; {
+		if vec.indices[i] == indices[j] {
+			v++
+			i++
+			j++
+		} else if vec.indices[i] < indices[j] {
+			i++
+		} else {
+			j++
+		}
 	}
+
 	return v % 2
 }
 

@@ -141,7 +141,10 @@ func (vec *DOKVector) Len() int {
 }
 
 func (vec *DOKVector) Dot(a SparseVector) int {
-	vec.checkBounds(a.Len() - 1)
+	if vec.length != a.Len() {
+		panic("lengths must be equal")
+	}
+
 	v := 0
 	for i := range vec.values {
 		v += a.At(i)
