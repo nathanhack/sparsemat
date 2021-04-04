@@ -121,7 +121,7 @@ func TestCSRVector_SetVec(t *testing.T) {
 	}
 }
 
-func TestCSRVector_NonzeroValues(t *testing.T) {
+func TestCSRVector_NonzeroMap(t *testing.T) {
 	tests := []struct {
 		input    SparseVector
 		expected map[int]int
@@ -131,7 +131,25 @@ func TestCSRVector_NonzeroValues(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			actual := test.input.NonzeroValues()
+			actual := test.input.NonzeroMap()
+			if !reflect.DeepEqual(actual, test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
+			}
+		})
+	}
+}
+
+func TestCSRVector_NonzeroArray(t *testing.T) {
+	tests := []struct {
+		input    SparseVector
+		expected []int
+	}{
+		{CSRIdentity(4).Row(2), []int{2}},
+		{CSRMat(4, 6, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1).Row(0), []int{0, 1, 3}},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			actual := test.input.NonzeroArray()
 			if !reflect.DeepEqual(actual, test.expected) {
 				t.Fatalf("expected %v but found %v", test.expected, actual)
 			}
@@ -277,6 +295,17 @@ func TestCSRVecCopy(t *testing.T) {
 				t.Fatalf("expected %v but foudn %v", test.vec, actual)
 			}
 		})
+	}
+}
+
+func BenchmarkCSRVecCopy(b *testing.B) {
+	vec := CSRVec(2000)
+	for i := 0; i < vec.Len(); i++ {
+		vec.Set(i, rand.Intn(2))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		CSRVecCopy(vec)
 	}
 }
 

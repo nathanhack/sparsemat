@@ -445,7 +445,7 @@ func (mat *DOKMatrix) SetColumn(j int, vec SparseVector) {
 		panic("matrix number of columns must equal length of vector")
 	}
 
-	mat.colValues[j] = vec.NonzeroValues()
+	mat.colValues[j] = vec.NonzeroMap()
 	for i := 0; i < mat.rows; i++ {
 		_, has := mat.colValues[j][i]
 		if has {
@@ -482,7 +482,7 @@ func (mat *DOKMatrix) SetRow(i int, vec SparseVector) {
 		panic("matrix number of columns must equal length of vector")
 	}
 
-	mat.rowValues[i] = vec.NonzeroValues()
+	mat.rowValues[i] = vec.NonzeroMap()
 	for j := 0; j < mat.cols; j++ {
 		_, has := mat.rowValues[i][j]
 		if has {

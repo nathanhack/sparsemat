@@ -3,7 +3,6 @@ package sparsemat
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -58,17 +57,9 @@ func CSRVec(length int, values ...int) SparseVector {
 }
 
 func CSRVecCopy(a SparseVector) SparseVector {
-	v := a.NonzeroValues()
-
-	indices := make([]int, 0, len(v))
-	for i := range v {
-		indices = append(indices, i)
-	}
-	sort.Ints(indices)
-
 	return &CSRVector{
 		length:  a.Len(),
-		indices: indices,
+		indices: a.NonzeroArray(),
 	}
 }
 
@@ -168,12 +159,18 @@ func (vec *CSRVector) Dot(a SparseVector) int {
 	return v % 2
 }
 
-func (vec *CSRVector) NonzeroValues() (indexToValues map[int]int) {
+func (vec *CSRVector) NonzeroMap() (indexToValues map[int]int) {
 	indexToValues = make(map[int]int)
 
 	for _, r := range vec.indices {
 		indexToValues[r] = 1
 	}
+	return
+}
+
+func (vec *CSRVector) NonzeroArray() (indices []int) {
+	indices = make([]int, len(vec.indices))
+	copy(indices, vec.indices)
 	return
 }
 

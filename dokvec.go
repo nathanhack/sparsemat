@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -65,7 +66,7 @@ func dokVec(length int, values ...int) *DOKVector {
 func DOKVecCopy(a SparseVector) SparseVector {
 	v := dokVec(a.Len())
 
-	for i := range a.NonzeroValues() {
+	for i := range a.NonzeroMap() {
 		v.values[i] = 1
 	}
 	return v
@@ -148,12 +149,21 @@ func (vec *DOKVector) Dot(a SparseVector) int {
 	return v % 2
 }
 
-func (vec *DOKVector) NonzeroValues() (indexToValues map[int]int) {
+func (vec *DOKVector) NonzeroMap() (indexToValues map[int]int) {
 	indexToValues = make(map[int]int)
 	for i := range vec.values {
 		indexToValues[i] = 1
 	}
 	return indexToValues
+}
+
+func (vec *DOKVector) NonzeroArray() (indices []int) {
+	indices = make([]int, 0, len(vec.values))
+	for i := range vec.values {
+		indices = append(indices, i)
+	}
+	sort.Ints(indices)
+	return
 }
 
 //Slice creates a slice of the Vector.  The slice will be connected to the original Vector, changes to one
@@ -205,7 +215,7 @@ func (vec *DOKVector) Add(a, b SparseVector) {
 }
 
 func (vec *DOKVector) Equals(v SparseVector) bool {
-	return vec.length == v.Len() && reflect.DeepEqual(vec.values, v.NonzeroValues())
+	return vec.length == v.Len() && reflect.DeepEqual(vec.values, v.NonzeroMap())
 }
 
 func (vec *DOKVector) MulMat(vec2 SparseVector, mat SparseMat) {

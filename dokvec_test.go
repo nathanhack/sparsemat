@@ -123,7 +123,7 @@ func TestDOKVector_SetVec(t *testing.T) {
 	}
 }
 
-func TestDOKVector_NonzeroValues(t *testing.T) {
+func TestDOKVector_NonzeroMap(t *testing.T) {
 	tests := []struct {
 		input    SparseVector
 		expected map[int]int
@@ -133,7 +133,25 @@ func TestDOKVector_NonzeroValues(t *testing.T) {
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			actual := test.input.NonzeroValues()
+			actual := test.input.NonzeroMap()
+			if !reflect.DeepEqual(actual, test.expected) {
+				t.Fatalf("expected %v but found %v", test.expected, actual)
+			}
+		})
+	}
+}
+
+func TestDOKVector_NonzeroArray(t *testing.T) {
+	tests := []struct {
+		input    SparseVector
+		expected []int
+	}{
+		{DOKIdentity(4).Row(2), []int{2}},
+		{DOKMat(4, 6, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1).Row(0), []int{0, 1, 3}},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			actual := test.input.NonzeroArray()
 			if !reflect.DeepEqual(actual, test.expected) {
 				t.Fatalf("expected %v but found %v", test.expected, actual)
 			}
