@@ -351,3 +351,17 @@ func (vec *DOKVector) HammingDistance(a SparseVector) int {
 	}
 	return count
 }
+
+//NextSet returns the next bit which is set starting from startingIndex, so if
+// the startingIndex is set it will be returned, if not it will be the next bit.
+// If no bits are found has bool will be set to false.
+func (vec *DOKVector) NextSet(startingIndex int) (index int, has bool) {
+	vec.checkBounds(startingIndex)
+
+	for i := startingIndex; i < vec.length; i++ {
+		if vec.at(i) > 0 {
+			return i, true
+		}
+	}
+	return -1, false
+}

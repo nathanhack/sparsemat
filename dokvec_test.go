@@ -355,3 +355,29 @@ func BenchmarkDOKVector_MulMat(b *testing.B) {
 		org.MulMat(v, m)
 	}
 }
+
+func TestDOKVector_NextSet(t *testing.T) {
+	tests := []struct {
+		vec           SparseVector
+		index         int
+		expectedIndex int
+		expectedHas   bool
+	}{
+		{DOKVec(5, 1, 0, 0, 0, 1), 0, 0, true},
+		{DOKVec(5, 1, 0, 0, 0, 1), 1, 4, true},
+		{DOKVec(5, 1, 0, 0, 0, 0), 1, -1, false},
+	}
+	for i, test := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			index, has := test.vec.NextSet(test.index)
+
+			if index != test.expectedIndex {
+				t.Fatalf("expected %v index but found %v", test.expectedIndex, index)
+			}
+
+			if has != test.expectedHas {
+				t.Fatalf("expected %v bool but found %v", test.expectedHas, has)
+			}
+		})
+	}
+}

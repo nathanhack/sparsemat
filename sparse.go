@@ -16,6 +16,7 @@ type SparseVector interface {
 	Negate()
 	NonzeroMap() (indicesToValues map[int]int)
 	NonzeroArray() (indices []int)
+	NextSet(startingIndex int) (index int, has bool)
 	Or(a, b SparseVector)
 	Set(i, value int)
 	SetVec(a SparseVector, i int)

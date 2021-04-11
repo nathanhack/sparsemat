@@ -377,3 +377,17 @@ func (vec *CSRVector) HammingDistance(a SparseVector) int {
 	}
 	return count
 }
+
+//NextSet returns the next bit which is set starting from startingIndex, so if
+// the startingIndex is set it will be returned, if not it will be the next bit.
+// If no bits are found has bool will be set to false.
+func (vec *CSRVector) NextSet(startingIndex int) (index int, has bool) {
+	vec.checkBounds(startingIndex)
+
+	index = findIndex(vec.indices, startingIndex)
+	if index == len(vec.indices) {
+		return -1, false
+	}
+
+	return vec.indices[index], true
+}
