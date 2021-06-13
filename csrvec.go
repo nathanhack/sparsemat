@@ -221,7 +221,7 @@ func (vec *CSRVector) Add(a, b SparseVector) {
 	}
 
 	for i := 0; i < vec.length; i++ {
-		vec.set(i, a.At(i)+b.At(i))
+		vec.set(i, (a.At(i)+b.At(i))%2)
 	}
 }
 
