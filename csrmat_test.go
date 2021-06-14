@@ -365,6 +365,59 @@ func TestCSRMatrix_SetRow(t *testing.T) {
 	}
 }
 
+func TestCSRMatrix_Row_SetRow(t *testing.T) {
+	rows, cols := 25, 25
+	data := make(map[int]map[int]int)
+
+	//make random data
+	for r := 0; r < rows; r++ {
+		data[r] = make(map[int]int)
+		for c := 0; c < cols; c++ {
+			if rand.Intn(2) == 1 {
+				data[r][c] = 1
+			}
+		}
+	}
+
+	//create a matrix from it
+	m := CSRMat(rows, cols)
+
+	for r, cs := range data {
+		for c := range cs {
+			m.Set(r, c, 1)
+		}
+	}
+
+	//grab a row and make some changes
+	row := m.Row(rows / 2)
+	data[rows/2] = make(map[int]int)
+
+	for c := 0; c < cols; c++ {
+		if rand.Intn(2) == 1 {
+			data[rows/2][c] = 1
+			row.Set(c, 1)
+		} else {
+			row.Set(c, 0)
+		}
+	}
+
+	m.SetRow(rows/2, row)
+
+	//create expected matrix
+	expected := CSRMat(rows, cols)
+
+	for r, cs := range data {
+		for c := range cs {
+			expected.Set(r, c, 1)
+		}
+	}
+
+	if !expected.Equals(m) {
+		t.Fatalf("expected %v but found %v", expected, m)
+	}
+
+}
+
 func TestCSRMatrix_SetMatrix(t *testing.T) {
 	tests := []struct {
 		dest             SparseMat
@@ -524,6 +577,35 @@ func TestCSRMatrix_SwapRows(t *testing.T) {
 				t.Fatalf("after rowswap(%v <> %v) expected \n%v\n but found \n%v\n", test.a, test.b, test.expected, test.input)
 			}
 		})
+	}
+}
+
+func TestCSRMatrix_SwapRows2(t *testing.T) {
+	input := CSRMat(5, 5,
+		1, 1, 1, 1, 1,
+		0, 1, 0, 0, 0,
+		0, 0, 0, 1, 1,
+		0, 0, 0, 0, 0,
+		1, 1, 1, 0, 0)
+
+	expected := CSRMat(5, 5,
+		0, 1, 0, 1, 0,
+		0, 0, 0, 0, 0,
+		0, 1, 0, 1, 0,
+		0, 0, 0, 0, 1,
+		1, 1, 1, 1, 1,
+	)
+
+	actual := CSRMatCopy(input)
+	actual.SwapRows(0, 4)
+	actual.SwapColumns(1, 4)
+	actual.SwapRows(1, 3)
+	r1 := actual.Row(0)
+	r1.Add(r1, actual.Row(4))
+	actual.SetRow(0, r1)
+
+	if !actual.Equals(expected) {
+		t.Errorf("expected \n%v\n but found \n%v\n", expected, actual)
 	}
 }
 

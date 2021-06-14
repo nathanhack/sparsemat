@@ -365,9 +365,9 @@ func insertOneElement(s []int, index int, value int) []int {
 	return s
 }
 
-func cutRange(a []int, start1 int, end1 int) []int {
-	copy(a[start1:], a[end1:])
-	a = a[:len(a)-(end1-start1)]
+func cutRange(a []int, start int, end int) []int {
+	copy(a[start:], a[end:])
+	a = a[:len(a)-(end-start)]
 	return a
 }
 
@@ -395,9 +395,8 @@ func (mat *CSRMatrix) Set(i, j, value int) {
 }
 
 func (mat *CSRMatrix) set(r, c, value int) {
+	start, end := findIndexRange(mat.rowIndices, r)
 	if value == 0 {
-		start, end := findIndexRange(mat.rowIndices, r)
-
 		if start == end {
 			return
 		}
@@ -413,7 +412,6 @@ func (mat *CSRMatrix) set(r, c, value int) {
 
 		return
 	}
-	start, end := findIndexRange(mat.rowIndices, r)
 
 	if start != end {
 		cols := mat.colIndices[start:end]
@@ -572,9 +570,12 @@ func (mat *CSRMatrix) Row(i int) SparseVector {
 	mat.checkRowBounds(i)
 
 	start, end := findIndexRange(mat.rowIndices, i)
+	vec := make([]int, end-start)
+	copy(vec, mat.colIndices[start:end])
+
 	return &CSRVector{
 		length:  mat.cols,
-		indices: mat.colIndices[start:end],
+		indices: vec,
 	}
 }
 
