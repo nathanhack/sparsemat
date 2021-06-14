@@ -590,6 +590,44 @@ func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
 	for j := 0; j < vec.Len(); j++ {
 		mat.set(i, j, vec.At(j))
 	}
+
+	//start, end := findIndexRange(mat.rowIndices, i)
+	//	size := end - start
+	//
+	//	values := vec.NonzeroArray()
+	//	valsLen := len(values)
+	//	switch {
+	//	case size > valsLen:
+	//		//is there data there than what will replace it
+	//		offset := start + valsLen
+	//		mat.rowIndices = cutRange(mat.rowIndices, offset, end)
+	//		mat.colIndices = cutRange(mat.colIndices, offset, end)
+	//	case size < len(values):
+	//		//we need more space than what is already there
+	//		mat.rowIndices = insertRange(mat.rowIndices, start, valsLen)
+	//		mat.colIndices = insertRange(mat.colIndices, start, valsLen)
+	//
+	//		for c := 0; c < valsLen; c++ {
+	//			mat.rowIndices[start+c] = i
+	//		}
+	//	}
+	//
+	//	copy(mat.colIndices[start:], values)
+}
+
+func insertRange(indices []int, index, count int) []int {
+	if cap(indices) >= len(indices)+count {
+		indices = append(indices, make([]int, count)...)
+		copy(indices[index+count:], indices[index:])
+		return indices
+	}
+
+	size := len(indices) + count
+	tmp := make([]int, size, size*2)
+	copy(tmp, indices[:index])
+	copy(tmp[index+count:], indices[index:])
+
+	return tmp
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.

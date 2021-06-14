@@ -46,7 +46,7 @@ func TestCSRMatCopy(t *testing.T) {
 	tests := []struct {
 		mat SparseMat
 	}{
-		{CSRMat(5, 5)},
+		//{CSRMat(5, 5)},
 		{CSRIdentity(5)},
 	}
 	for i, test := range tests {
@@ -58,6 +58,40 @@ func TestCSRMatCopy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func BenchmarkCSRMatCopy(b *testing.B) {
+	benchmarks := []struct {
+		rows, cols int
+	}{
+		{100, 10},
+		{100, 100},
+		{100, 1000},
+		{100, 10000},
+	}
+	for r, bm := range benchmarks {
+		b.Run(strconv.Itoa(r), func(b *testing.B) {
+			m := randomMatrix(bm.rows, bm.cols)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				CSRMatCopy(m)
+			}
+		})
+	}
+}
+
+func randomMatrix(rows, cols int) SparseMat {
+	m := CSRMat(rows, cols)
+
+	//make random data
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			if rand.Intn(2) == 1 {
+				m.Set(r, c, 1)
+			}
+		}
+	}
+	return m
 }
 
 func TestCSRMatrix_Dim(t *testing.T) {
@@ -415,7 +449,6 @@ func TestCSRMatrix_Row_SetRow(t *testing.T) {
 	if !expected.Equals(m) {
 		t.Fatalf("expected %v but found %v", expected, m)
 	}
-
 }
 
 func TestCSRMatrix_SetMatrix(t *testing.T) {
