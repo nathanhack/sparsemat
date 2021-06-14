@@ -14,6 +14,8 @@ func TestCSRVector_Add(t *testing.T) {
 		expected     SparseVector
 	}{
 		{CSRVec(3, 0, 1, 0), CSRVec(3, 1, 0, 0), CSRVec(3), CSRVec(3, 1, 1, 0)},
+		{CSRVec(3, 0, 1, 0), CSRVec(3, 0, 0, 1), CSRVec(3), CSRVec(3, 0, 1, 1)},
+		{CSRVec(3, 1, 1, 0), CSRVec(3, 0, 1, 1), CSRVec(3), CSRVec(3, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -23,6 +25,35 @@ func TestCSRVector_Add(t *testing.T) {
 			}
 		})
 	}
+}
+
+func BenchmarkCSRVector_Add(b *testing.B) {
+	benchmarks := []struct {
+		size int
+	}{
+		{10},
+		{100},
+		{1000},
+		{10000},
+	}
+	for bi, bm := range benchmarks {
+		b.Run(strconv.Itoa(bi), func(b *testing.B) {
+			av, bv := randomCSRVector(bm.size), randomCSRVector(bm.size)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				av.Add(av, bv)
+			}
+		})
+	}
+}
+
+func randomCSRVector(size int) SparseVector {
+	vec := CSRVec(size)
+
+	for i := 0; i < size; i++ {
+		vec.Set(i, rand.Intn(2))
+	}
+	return vec
 }
 
 func TestCSRVector_Dot(t *testing.T) {

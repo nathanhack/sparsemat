@@ -220,8 +220,33 @@ func (vec *CSRVector) Add(a, b SparseVector) {
 		panic("adding vectors, destination must have the same length")
 	}
 
-	for i := 0; i < vec.length; i++ {
-		vec.set(i, (a.At(i)+b.At(i))%2)
+	av := a.NonzeroArray()
+	bv := b.NonzeroArray()
+	avLen := len(av)
+	bvLen := len(bv)
+	vec.indices = make([]int, 0, avLen+bvLen)
+
+	ai := 0
+	bi := 0
+	for ai < avLen && bi < bvLen {
+		switch {
+		case av[ai] < bv[bi]:
+			vec.indices = append(vec.indices, av[ai])
+			ai++
+		case av[ai] > bv[bi]:
+			vec.indices = append(vec.indices, bv[bi])
+			bi++
+		case av[ai] == bv[bi]:
+			ai++
+			bi++
+		}
+	}
+
+	for ; ai < avLen; ai++ {
+		vec.indices = append(vec.indices, av[ai])
+	}
+	for ; bi < bvLen; bi++ {
+		vec.indices = append(vec.indices, bv[bi])
 	}
 }
 
