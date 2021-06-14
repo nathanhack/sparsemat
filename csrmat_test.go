@@ -3,6 +3,8 @@ package sparsemat
 import (
 	"encoding/json"
 	"math/rand"
+	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 )
@@ -448,6 +450,31 @@ func TestCSRMatrix_Row_SetRow(t *testing.T) {
 
 	if !expected.Equals(m) {
 		t.Fatalf("expected %v but found %v", expected, m)
+	}
+}
+
+func TestCSRMatrix_Row_SetRow2(t *testing.T) {
+	rows, cols := 2000, 10
+	swaps := 10000
+	m := randomMatrix(rows, cols)
+
+	for i := 0; i < swaps; i++ {
+		r1 := rand.Intn(rows)
+		r2 := rand.Intn(rows)
+		row1 := m.Row(r1)
+		row2 := m.Row(r2)
+
+		row1.Add(row1, row2) //make a change
+
+		m.SetRow(r1, row1)
+
+		row := m.Row(r1)
+		ra1 := row.NonzeroArray()
+		sort.Ints(ra1)
+		ra2 := row.NonzeroArray()
+		if !reflect.DeepEqual(ra1, ra2) {
+			t.Fatalf("expected \n%v\n but found \n%v\n on row %v", ra2, ra1, r1)
+		}
 	}
 }
 

@@ -598,12 +598,13 @@ func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
 		offset := start + valsLen
 		mat.rowIndices = cutRange(mat.rowIndices, offset, end)
 		mat.colIndices = cutRange(mat.colIndices, offset, end)
-	case size < len(values):
+	case size < valsLen:
 		//we need more space than what is already there
-		mat.rowIndices = insertRange(mat.rowIndices, start, valsLen)
-		mat.colIndices = insertRange(mat.colIndices, start, valsLen)
+		diff := valsLen - size
+		mat.rowIndices = insertRange(mat.rowIndices, start, diff)
+		mat.colIndices = insertRange(mat.colIndices, start, diff)
 
-		for c := 0; c < valsLen; c++ {
+		for c := 0; c < diff; c++ {
 			mat.rowIndices[start+c] = i
 		}
 	}
