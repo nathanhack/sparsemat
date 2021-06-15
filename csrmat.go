@@ -191,16 +191,14 @@ func (mat *CSRMatrix) SwapColumns(j1, j2 int) {
 		}
 
 		if hasj1 {
-			copy(row[c1:], row[c1+1:])
-			if j2InRow {
-				row[c2] = j2
-			} else {
-				row[rowLen-1] = j2
-			}
+			copy(row[c1:c2], row[c1+1:c2])
+			row[c2-1] = j2
 			continue
 		}
 
-		copy(row[c1+1:], row[c1:])
+		if c1 < c2 {
+			copy(row[c1+1:], row[c1:c2])
+		}
 		row[c1] = j1
 	}
 }

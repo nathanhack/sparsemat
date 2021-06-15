@@ -691,6 +691,8 @@ func TestCSRMatrix_SwapColumns(t *testing.T) {
 		expected SparseMat
 	}{
 		{CSRIdentity(4), 1, 3, CSRMat(4, 4, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0)},
+		{CSRMat(3, 3, 1, 0, 1, 0, 0, 1, 0, 1, 1), 0, 2, CSRMat(3, 3, 1, 0, 1, 1, 0, 0, 1, 1, 0)},
+		{CSRMat(3, 3, 1, 0, 1, 0, 0, 1, 0, 1, 1), 0, 1, CSRMat(3, 3, 0, 1, 1, 0, 0, 1, 1, 0, 1)},
 	}
 	for i, test := range tests {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -699,6 +701,25 @@ func TestCSRMatrix_SwapColumns(t *testing.T) {
 				t.Fatalf("expected %v but found %v", test.expected, test.input)
 			}
 		})
+	}
+}
+
+func TestCSRMatrix_SwapColumns_random(t *testing.T) {
+	rows, cols := 10_000, 16
+	mat := randomMatrix(rows, cols)
+
+	for i := 0; i < cols; i++ {
+		for ii := i; ii < cols; ii++ {
+			cmat := CSRMatCopy(mat)
+			cmat.SwapColumns(i, ii)
+
+			if !mat.Column(i).Equals(cmat.Column(ii)) {
+				t.Fatalf("expected column %v and %v to be equal for \n%v", i, ii, mat)
+			}
+			if !mat.Column(ii).Equals(cmat.Column(i)) {
+				t.Fatalf("expected column %v and %v to be equal for \n%v", i, ii, mat)
+			}
+		}
 	}
 }
 
