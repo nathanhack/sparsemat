@@ -11,22 +11,19 @@ import (
 
 type CSRMatrix struct {
 	rows, cols int
-	rowIndices []int
-	colIndices []int
+	data       [][]int
 }
 
 type csrMatrix struct {
 	Rows, Cols int
-	RowIndices []int
-	ColIndices []int
+	Data       [][]int
 }
 
 func (mat *CSRMatrix) MarshalJSON() ([]byte, error) {
 	return json.Marshal(csrMatrix{
-		Rows:       mat.rows,
-		Cols:       mat.cols,
-		RowIndices: mat.rowIndices,
-		ColIndices: mat.colIndices,
+		Rows: mat.rows,
+		Cols: mat.cols,
+		Data: mat.data,
 	})
 }
 
@@ -39,8 +36,7 @@ func (mat *CSRMatrix) UnmarshalJSON(bytes []byte) error {
 
 	mat.rows = m.Rows
 	mat.cols = m.Cols
-	mat.rowIndices = m.RowIndices
-	mat.colIndices = m.ColIndices
+	mat.data = m.Data
 	return nil
 }
 
@@ -58,10 +54,13 @@ func csrMat(rows, cols int, values ...int) *CSRMatrix {
 	}
 
 	mat := CSRMatrix{
-		rows:       rows,
-		cols:       cols,
-		rowIndices: make([]int, 0),
-		colIndices: make([]int, 0),
+		rows: rows,
+		cols: cols,
+		data: make([][]int, rows),
+	}
+
+	for i := 0; i < rows; i++ {
+		mat.data[i] = make([]int, 0)
 	}
 
 	if len(values) > 0 {
@@ -87,8 +86,7 @@ func CSRIdentity(size int) SparseMat {
 	mat := csrMat(size, size)
 
 	for i := 0; i < size; i++ {
-		mat.rowIndices = append(mat.rowIndices, i)
-		mat.colIndices = append(mat.colIndices, i)
+		mat.data[i] = append(mat.data[i], i)
 	}
 
 	return mat
@@ -164,110 +162,46 @@ func (mat *CSRMatrix) SwapRows(i1, i2 int) {
 		return
 	}
 
-	if i1 > i2 {
-		i1, i2 = i2, i1
-	}
-
-	start1, end1 := findIndexRange(mat.rowIndices, i1)
-	len1 := end1 - start1
-
-	start2, end2 := findIndexRange(mat.rowIndices, i2)
-	len2 := end2 - start2
-
-	if len1 == len2 {
-		//an easy swap
-		for i := 0; i < len1; i++ {
-			mat.colIndices[start2+i], mat.colIndices[start1+i] = mat.colIndices[start1+i], mat.colIndices[start2+i]
-		}
-		return
-	}
-
-	//we need to make a copy of the data
-	i1col := make([]int, len1)
-	for i := 0; i < len1; i++ {
-		i1col[i] = mat.colIndices[start1+i]
-	}
-
-	i2col := make([]int, len2)
-	for i := 0; i < len2; i++ {
-		i2col[i] = mat.colIndices[start2+i]
-	}
-
-	if len1 < len2 {
-		//we only need to shift to the right
-		///  i1..i1..#..#..i2..i2
-		lendiff := len2 - len1
-		s221 := start2 + lendiff
-		for i := start2 - 1; i >= end1; i-- {
-			mat.rowIndices[i+lendiff] = mat.rowIndices[i]
-			mat.colIndices[i+lendiff] = mat.colIndices[i]
-		}
-
-		for i := 0; i < len1; i++ {
-			t := s221 + i
-			mat.rowIndices[t] = i2
-			mat.colIndices[t] = i1col[i]
-		}
-
-		for i := 0; i < len2; i++ {
-			t := start1 + i
-			mat.rowIndices[t] = i1
-			mat.colIndices[t] = i2col[i]
-		}
-		return
-	}
-
-	//lastly we take care of the case when len2 < len1
-	//we only need to shift to the left
-	///  i1..i1..#..#..i2..i2
-	lendiff := len1 - len2
-	s221 := start2 - lendiff
-	for i := end1; i < start2; i++ {
-		mat.rowIndices[i-lendiff] = mat.rowIndices[i]
-		mat.colIndices[i-lendiff] = mat.colIndices[i]
-	}
-
-	for i := 0; i < len1; i++ {
-		t := s221 + i
-		mat.rowIndices[t] = i2
-		mat.colIndices[t] = i1col[i]
-	}
-
-	for i := 0; i < len2; i++ {
-		t := start1 + i
-		mat.rowIndices[t] = i1
-		mat.colIndices[t] = i2col[i]
-	}
+	tmp := mat.data[i1]
+	mat.data[i1] = mat.data[i2]
+	mat.data[i2] = tmp
 }
 
 func (mat *CSRMatrix) SwapColumns(j1, j2 int) {
 	mat.checkColBounds(j1)
 	mat.checkColBounds(j2)
 
-	col1 := make([]int, 0)
-	col2 := make([]int, 0)
+	if j1 > j2 {
+		j1, j2 = j2, j1
+	}
 
-	for i, j := range mat.colIndices {
-		switch j {
-		case j1:
-			col1 = append(col1, mat.rowIndices[i])
-		case j2:
-			col2 = append(col2, mat.rowIndices[i])
+	for i := 0; i < mat.rows; i++ {
+		row := mat.data[i]
+		c1 := findIndex(row, j1)
+		c2 := findIndex(row, j2)
+
+		rowLen := len(row)
+		j1InRow := c1 < rowLen
+		j2InRow := c2 < rowLen
+		hasj1 := j1InRow && row[c1] == j1
+		hasj2 := j2InRow && row[c2] == j2
+
+		if hasj1 == hasj2 {
+			continue
 		}
-	}
 
-	for _, r := range col1 {
-		mat.set(r, j1, 0)
-	}
-	for _, r := range col2 {
-		mat.set(r, j2, 0)
-	}
+		if hasj1 {
+			copy(row[c1:], row[c1+1:])
+			if j2InRow {
+				row[c2] = j2
+			} else {
+				row[rowLen-1] = j2
+			}
+			continue
+		}
 
-	for _, r := range col1 {
-		mat.set(r, j2, 1)
-	}
-	for _, r := range col2 {
-		mat.set(r, j1, 1)
+		copy(row[c1+1:], row[c1:])
+		row[c1] = j1
 	}
 }
 
@@ -278,65 +212,10 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 	mat.checkRowBounds(i2)
 	mat.checkRowBounds(dest)
 
-	tmp := make(map[int]int)
+	av := mat.data[i1]
+	bv := mat.data[i2]
 
-	start1, end1 := findIndexRange(mat.rowIndices, i1)
-	for i := start1; i < end1; i++ {
-		r := mat.colIndices[i]
-		tmp[r] = 1
-	}
-
-	start1, end1 = findIndexRange(mat.rowIndices, i2)
-	for i := start1; i < end1; i++ {
-		r := mat.colIndices[i]
-		tmp[r] += 1
-	}
-
-	cols := make([]int, len(tmp))
-	index := 0
-	for c, v := range tmp {
-		if v%2 == 1 {
-			cols[index] = c
-			index++
-		}
-	}
-	cols = cols[:index]
-
-	sort.Ints(cols)
-	colsLen := len(cols)
-
-	//next find out where it's to go
-	start1, end1 = findIndexRange(mat.rowIndices, dest)
-
-	diff := end1 - start1
-	if diff > colsLen {
-		//it's too big we'll cut it down to size
-		count := diff - colsLen
-		rowLen := len(mat.rowIndices)
-		for i, iCount := start1+count, start1; i < rowLen; i, iCount = i+1, iCount+1 {
-			mat.rowIndices[iCount] = mat.rowIndices[i]
-			mat.colIndices[iCount] = mat.colIndices[i]
-		}
-		end := rowLen - count
-		mat.rowIndices = mat.rowIndices[:end]
-		mat.colIndices = mat.colIndices[:end]
-	} else if diff < colsLen {
-		count := colsLen - diff
-		for i := 0; i < count; i++ {
-			mat.rowIndices = append(mat.rowIndices, 0)
-			mat.colIndices = append(mat.colIndices, 0)
-		}
-		ri := len(mat.rowIndices)
-		for i, t := ri-1, ri-1-count; i >= start1+colsLen; i, t = i-1, t-1 {
-			mat.rowIndices[i] = mat.rowIndices[t]
-			mat.colIndices[i] = mat.colIndices[t]
-		}
-	}
-
-	for i, t := 0, start1; i < colsLen; i, t = i+1, t+1 {
-		mat.rowIndices[t] = dest
-		mat.colIndices[t] = cols[i]
-	}
+	mat.data[dest] = addRows(av, bv)
 }
 
 func findIndexRange(indices []int, index int) (start, end int) {
@@ -372,13 +251,7 @@ func cutRange(a []int, start int, end int) []int {
 }
 
 func (mat *CSRMatrix) at(r, c int) int {
-	start, end := findIndexRange(mat.rowIndices, r)
-
-	if start == end {
-		return 0
-	}
-	cols := mat.colIndices[start:end]
-
+	cols := mat.data[r]
 	j := findIndex(cols, c)
 	if j == len(cols) || cols[j] != c {
 		return 0
@@ -395,43 +268,32 @@ func (mat *CSRMatrix) Set(i, j, value int) {
 }
 
 func (mat *CSRMatrix) set(r, c, value int) {
-	start, end := findIndexRange(mat.rowIndices, r)
+	cols := mat.data[r]
+	j := findIndex(cols, c)
 	if value == 0 {
-		if start == end {
-			return
-		}
-		cols := mat.colIndices[start:end]
-
-		j := findIndex(cols, c)
 		if j == len(cols) || cols[j] != c {
 			return
 		}
-		j1 := j + 1
-		mat.rowIndices = cutRange(mat.rowIndices, start+j, start+j1)
-		mat.colIndices = cutRange(mat.colIndices, start+j, start+j1)
-
+		mat.data[r] = cutRange(cols, j, j+1)
 		return
 	}
 
-	if start != end {
-		cols := mat.colIndices[start:end]
-		i := findIndex(cols, c)
-		if i < len(cols) && cols[i] == c {
-			return
-		}
-		start += i
+	if j < len(cols) && cols[j] == c {
+		return
 	}
 
-	mat.rowIndices = insertOneElement(mat.rowIndices, start, r)
-	mat.colIndices = insertOneElement(mat.colIndices, start, c)
+	mat.data[r] = insertOneElement(cols, j, c)
 }
 
 //T returns a new matrix that is the transpose of the underlying matrix.
 func (mat *CSRMatrix) T() SparseMat {
 	m := csrMat(mat.cols, mat.rows)
 
-	for i := 0; i < len(mat.rowIndices); i++ {
-		m.set(mat.colIndices[i], mat.rowIndices[i], 1)
+	for i := 0; i < mat.rows; i++ {
+		cols := mat.data[i]
+		for _, j := range cols {
+			m.set(j, i, 1)
+		}
 	}
 
 	return m
@@ -439,8 +301,10 @@ func (mat *CSRMatrix) T() SparseMat {
 
 //Zeroize take the current matrix sets all values to 0.
 func (mat *CSRMatrix) Zeroize() {
-	mat.rowIndices = make([]int, 0)
-	mat.colIndices = make([]int, 0)
+	mat.data = make([][]int, mat.rows)
+	for i := 0; i < mat.rows; i++ {
+		mat.data[i] = make([]int, 0)
+	}
 }
 
 //ZeroizeRange take the current matrix sets values inside the range to zero.
@@ -521,29 +385,53 @@ func (mat *CSRMatrix) Add(a, b SparseMat) {
 
 func (mat *CSRMatrix) add(a, b SparseMat) {
 	for i := 0; i < mat.rows; i++ {
-		for j := 0; j < mat.cols; j++ {
-			aa := a.At(i, j)
-			bb := b.At(i, j)
-			mat.set(i, j, (aa+bb)%2)
+		mat.data[i] = addRows(a.Row(i).NonzeroArray(), b.Row(i).NonzeroArray())
+	}
+}
+
+func addRows(av, bv []int) []int {
+	avLen := len(av)
+	bvLen := len(bv)
+	vec := make([]int, 0, avLen+bvLen)
+
+	ai := 0
+	bi := 0
+	for ai < avLen && bi < bvLen {
+		switch {
+		case av[ai] < bv[bi]:
+			vec = append(vec, av[ai])
+			ai++
+		case av[ai] > bv[bi]:
+			vec = append(vec, bv[bi])
+			bi++
+		case av[ai] == bv[bi]:
+			ai++
+			bi++
 		}
 	}
+
+	for ; ai < avLen; ai++ {
+		vec = append(vec, av[ai])
+	}
+	for ; bi < bvLen; bi++ {
+		vec = append(vec, bv[bi])
+	}
+	return vec
 }
 
 //Column returns a map containing the non zero row indices as the keys and it's associated values.
 func (mat *CSRMatrix) Column(j int) SparseVector {
 	mat.checkColBounds(j)
 
-	indices := make([]int, mat.rows)
+	indices := make([]int, 0, mat.rows)
 
-	ii := 0
-	for i, c := range mat.colIndices {
-		if c == j {
-			r := mat.rowIndices[i]
-			indices[ii] = r
-			ii++
+	for i := 0; i < mat.rows; i++ {
+		row := mat.data[i]
+		c := findIndex(row, j)
+		if c < len(row) && row[c] == j {
+			indices = append(indices, i)
 		}
 	}
-	indices = indices[:ii]
 
 	return &CSRVector{
 		length:  mat.rows,
@@ -569,9 +457,9 @@ func (mat *CSRMatrix) SetColumn(j int, vec SparseVector) {
 func (mat *CSRMatrix) Row(i int) SparseVector {
 	mat.checkRowBounds(i)
 
-	start, end := findIndexRange(mat.rowIndices, i)
-	vec := make([]int, end-start)
-	copy(vec, mat.colIndices[start:end])
+	row := mat.data[i]
+	vec := make([]int, len(row))
+	copy(vec, row)
 
 	return &CSRVector{
 		length:  mat.cols,
@@ -587,44 +475,7 @@ func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
 		panic("matrix number of columns must equal length of vector")
 	}
 
-	start, end := findIndexRange(mat.rowIndices, i)
-	size := end - start
-
-	values := vec.NonzeroArray()
-	valsLen := len(values)
-	switch {
-	case size > valsLen:
-		//is there data there than what will replace it
-		offset := start + valsLen
-		mat.rowIndices = cutRange(mat.rowIndices, offset, end)
-		mat.colIndices = cutRange(mat.colIndices, offset, end)
-	case size < valsLen:
-		//we need more space than what is already there
-		diff := valsLen - size
-		mat.rowIndices = insertRange(mat.rowIndices, start, diff)
-		mat.colIndices = insertRange(mat.colIndices, start, diff)
-
-		for c := 0; c < diff; c++ {
-			mat.rowIndices[start+c] = i
-		}
-	}
-
-	copy(mat.colIndices[start:], values)
-}
-
-func insertRange(indices []int, index, count int) []int {
-	if cap(indices) >= len(indices)+count {
-		indices = append(indices, make([]int, count)...)
-		copy(indices[index+count:], indices[index:])
-		return indices
-	}
-
-	size := len(indices) + count
-	tmp := make([]int, size, size*2)
-	copy(tmp, indices[:index])
-	copy(tmp[index+count:], indices[index:])
-
-	return tmp
+	mat.data[i] = vec.NonzeroArray()
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.
