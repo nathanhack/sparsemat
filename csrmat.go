@@ -218,18 +218,6 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 	mat.data[dest] = addRows(av, bv)
 }
 
-func findIndexRange(indices []int, index int) (start, end int) {
-	il := len(indices)
-	start = sort.Search(il, func(i int) bool {
-		return indices[i] >= index
-	})
-
-	end = sort.Search(il, func(i int) bool {
-		return indices[i] >= index+1
-	})
-	return
-}
-
 func findIndex(indices []int, value int) int {
 	il := len(indices)
 	return sort.Search(il, func(i int) bool {
