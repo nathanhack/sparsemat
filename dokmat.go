@@ -15,32 +15,36 @@ type DOKMatrix struct {
 	cols      int                 // total number cols available to this matrix
 }
 
-type dokMatrix struct {
-	RowValues map[int]map[int]int //hold rowValues for (X,Y)
-	ColValues map[int]map[int]int //easy access to (Y,X)
-	Rows      int                 // total number rows available to this matrix
-	Cols      int                 // total number cols available to this matrix
-}
-
 func (mat *DOKMatrix) MarshalJSON() ([]byte, error) {
-	return json.Marshal(dokMatrix{
-		RowValues: mat.rowValues,
-		ColValues: mat.colValues,
-		Rows:      mat.rows,
-		Cols:      mat.cols,
-	})
+	m := CSRMatCopy(mat)
+	return json.Marshal(m)
 }
 
 func (mat *DOKMatrix) UnmarshalJSON(bytes []byte) error {
-	var m dokMatrix
-	err := json.Unmarshal(bytes, &m)
+	var csr CSRMatrix
+	err := json.Unmarshal(bytes, &csr)
 	if err != nil {
 		return err
 	}
-	mat.rowValues = m.RowValues
-	mat.colValues = m.ColValues
-	mat.rows = m.Rows
-	mat.cols = m.Cols
+
+	rows, cols := csr.Dims()
+	mat.rows = rows
+	mat.cols = cols
+	mat.rowValues = map[int]map[int]int{}
+	mat.colValues = map[int]map[int]int{}
+
+	for i := 0; i < rows; i++ {
+		mat.rowValues[i] = make(map[int]int)
+	}
+	for j := 0; j < cols; j++ {
+		mat.colValues[j] = make(map[int]int)
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			mat.set(i, j, csr.At(i, j))
+		}
+	}
 	return nil
 }
 
