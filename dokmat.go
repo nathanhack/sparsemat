@@ -567,7 +567,7 @@ func (mat *DOKMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
 }
 
 //Negate performs a piecewise logical negation.
-func (mat *DOKMatrix) Negate() {
+func (mat *DOKMatrix) Negate() SparseMat {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
 
@@ -575,6 +575,7 @@ func (mat *DOKMatrix) Negate() {
 			mat.set(i, j, v%2)
 		}
 	}
+	return mat
 }
 
 //And executes a piecewise logical AND on the two matrices and stores the values in this matrix.

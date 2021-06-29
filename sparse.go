@@ -13,7 +13,7 @@ type SparseVector interface {
 	MarshalJSON() ([]byte, error)
 	MatMul(mat SparseMat, vec SparseVector)
 	MulMat(vec SparseVector, mat SparseMat)
-	Negate()
+	Negate() SparseVector
 	NonzeroMap() (indicesToValues map[int]int)
 	NonzeroArray() (indices []int)
 	NextSet(startingIndex int) (index int, has bool)
@@ -36,7 +36,7 @@ type SparseMat interface {
 	Equals(m SparseMat) bool
 	MarshalJSON() ([]byte, error)
 	Mul(a, b SparseMat)
-	Negate()
+	Negate() SparseMat
 	Or(a, b SparseMat)
 	Row(i int) SparseVector
 	Set(i, j, value int)

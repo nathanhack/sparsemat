@@ -319,7 +319,7 @@ func (vec *DOKVector) XOr(a, b SparseVector) {
 	}
 }
 
-func (vec *DOKVector) Negate() {
+func (vec *DOKVector) Negate() SparseVector {
 	for i := 0; i < vec.length; i++ {
 		_, has := vec.values[i]
 		if has {
@@ -328,6 +328,7 @@ func (vec *DOKVector) Negate() {
 			vec.values[i] = 1
 		}
 	}
+	return vec
 }
 
 func (vec *DOKVector) IsZero() bool {

@@ -536,12 +536,13 @@ func (mat *CSRMatrix) setMatrix(a SparseMat, rOffset, cOffset int) {
 }
 
 //Negate performs a piecewise logical negation.
-func (mat *CSRMatrix) Negate() {
+func (mat *CSRMatrix) Negate() SparseMat {
 	for i := 0; i < mat.rows; i++ {
 		for j := 0; j < mat.cols; j++ {
 			mat.set(i, j, (mat.at(i, j)+1)%2)
 		}
 	}
+	return mat
 }
 
 //And executes a piecewise logical AND on the two matrices and stores the values in this matrix.

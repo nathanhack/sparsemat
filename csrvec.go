@@ -365,7 +365,7 @@ func (vec *CSRVector) XOr(a, b SparseVector) {
 	}
 }
 
-func (vec *CSRVector) Negate() {
+func (vec *CSRVector) Negate() SparseVector {
 	indices := make([]int, 0)
 
 	in := make(map[int]bool)
@@ -379,6 +379,7 @@ func (vec *CSRVector) Negate() {
 		}
 	}
 	vec.indices = indices
+	return vec
 }
 
 func (vec *CSRVector) IsZero() bool {
