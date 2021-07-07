@@ -39,7 +39,7 @@ func (vec *CSRVector) UnmarshalJSON(bytes []byte) error {
 func CSRVec(length int, values ...int) SparseVector {
 	if len(values) != 0 {
 		if length != len(values) {
-			panic("length and number of values must be equal")
+			panic(fmt.Sprintf("length(%v) and number of values (%v) must be equal", length, len(values)))
 		}
 	}
 	indices := make([]int, 0)
