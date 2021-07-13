@@ -208,6 +208,7 @@ func (vec *DOKVector) Add(a, b SparseVector) {
 	if a.Len() != b.Len() {
 		panic("adding vectors must have the same length")
 	}
+
 	if vec.Len() != a.Len() {
 		panic("adding vectors, destination must have the same length")
 	}
@@ -281,10 +282,6 @@ func (vec *DOKVector) Or(a, b SparseVector) {
 		panic("OR input was found to be nil")
 	}
 
-	if vec == a || vec == b {
-		panic("OR self assignment not allowed")
-	}
-
 	if a.Len() != b.Len() {
 		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
 	}
@@ -292,6 +289,7 @@ func (vec *DOKVector) Or(a, b SparseVector) {
 	if vec.Len() != a.Len() {
 		panic(fmt.Sprintf("vec len:%v does not match expected %v", vec.Len(), a.Len()))
 	}
+
 	for i := 0; i < vec.length; i++ {
 		vec.set(i, a.At(i)|b.At(i))
 	}
@@ -300,10 +298,6 @@ func (vec *DOKVector) Or(a, b SparseVector) {
 func (vec *DOKVector) XOr(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
-	}
-
-	if vec == a || vec == b {
-		panic("XOR self assignment not allowed")
 	}
 
 	if a.Len() != b.Len() {

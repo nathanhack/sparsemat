@@ -304,10 +304,6 @@ func (vec *CSRVector) And(a, b SparseVector) {
 		panic("AND input was found to be nil")
 	}
 
-	if vec == a || vec == b {
-		panic("AND self assignment not allowed")
-	}
-
 	if a.Len() != b.Len() {
 		panic(fmt.Sprintf("AND shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
 	}
@@ -326,10 +322,6 @@ func (vec *CSRVector) Or(a, b SparseVector) {
 		panic("OR input was found to be nil")
 	}
 
-	if vec == a || vec == b {
-		panic("OR self assignment not allowed")
-	}
-
 	if a.Len() != b.Len() {
 		panic(fmt.Sprintf("OR shape misalignment both inputs must be equal length found  %v and %v", a.Len(), b.Len()))
 	}
@@ -346,10 +338,6 @@ func (vec *CSRVector) Or(a, b SparseVector) {
 func (vec *CSRVector) XOr(a, b SparseVector) {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
-	}
-
-	if vec == a || vec == b {
-		panic("XOR self assignment not allowed")
 	}
 
 	if a.Len() != b.Len() {
