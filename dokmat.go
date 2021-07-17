@@ -174,12 +174,12 @@ func (mat *DOKMatrix) At(i, j int) int {
 	return mat.at(i, j)
 }
 
-func (mat *DOKMatrix) SwapRows(i1, i2 int) {
+func (mat *DOKMatrix) SwapRows(i1, i2 int) SparseMat {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 
 	if i1 == i2 {
-		return
+		return mat
 	}
 
 	//make a temp copy of i1 row and zero it out
@@ -199,9 +199,11 @@ func (mat *DOKMatrix) SwapRows(i1, i2 int) {
 	for c := range tmp {
 		mat.set(i2, c, 1)
 	}
+
+	return mat
 }
 
-func (mat *DOKMatrix) SwapColumns(j1, j2 int) {
+func (mat *DOKMatrix) SwapColumns(j1, j2 int) SparseMat {
 	mat.checkColBounds(j1)
 	mat.checkColBounds(j2)
 
@@ -222,11 +224,13 @@ func (mat *DOKMatrix) SwapColumns(j1, j2 int) {
 	for r := range tmp {
 		mat.set(r, j2, 1)
 	}
+
+	return mat
 }
 
 //AddRows is fast row operation to add two
 // rows and put the result in a destination row.
-func (mat *DOKMatrix) AddRows(i1, i2, dest int) {
+func (mat *DOKMatrix) AddRows(i1, i2, dest int) SparseMat {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 	mat.checkRowBounds(dest)
@@ -248,11 +252,13 @@ func (mat *DOKMatrix) AddRows(i1, i2, dest int) {
 	for c, v := range tmp {
 		mat.set(dest, c, v%2)
 	}
+
+	return mat
 }
 
 //AddRows is fast row operation to add two
 // rows and put the result in a destination row.
-func (mat *DOKMatrix) AddCols(j1, j2, dest int) {
+func (mat *DOKMatrix) AddCols(j1, j2, dest int) SparseMat {
 	mat.checkColBounds(j1)
 	mat.checkColBounds(j2)
 	mat.checkColBounds(dest)
@@ -274,6 +280,8 @@ func (mat *DOKMatrix) AddCols(j1, j2, dest int) {
 	for r, v := range tmp {
 		mat.set(r, dest, v%2)
 	}
+
+	return mat
 }
 
 func (mat *DOKMatrix) at(r, c int) int {
@@ -289,10 +297,12 @@ func (mat *DOKMatrix) at(r, c int) int {
 }
 
 //Set sets the value at row index i and column index j to value.
-func (mat *DOKMatrix) Set(i, j, value int) {
+func (mat *DOKMatrix) Set(i, j, value int) SparseMat {
 	mat.checkRowBounds(i)
 	mat.checkColBounds(j)
 	mat.set(i, j, value%2)
+
+	return mat
 }
 
 func (mat *DOKMatrix) set(r, c, value int) {
@@ -329,13 +339,15 @@ func (mat *DOKMatrix) T() SparseMat {
 }
 
 //Zeroize take the current matrix sets all values to 0.
-func (mat *DOKMatrix) Zeroize() {
+func (mat *DOKMatrix) Zeroize() SparseMat {
 	mat.rowValues = make(map[int]map[int]int)
 	mat.colValues = make(map[int]map[int]int)
+
+	return mat
 }
 
 //ZeroizeRange take the current matrix sets values inside the range to zero.
-func (mat *DOKMatrix) ZeroizeRange(i, j, rows, cols int) {
+func (mat *DOKMatrix) ZeroizeRange(i, j, rows, cols int) SparseMat {
 	if i < 0 || j < 0 || rows < 0 || cols < 0 {
 		panic("zeroize must have positive values")
 	}
@@ -344,6 +356,8 @@ func (mat *DOKMatrix) ZeroizeRange(i, j, rows, cols int) {
 	}
 
 	mat.zeroize(i, j, rows, cols)
+
+	return mat
 }
 
 func (mat *DOKMatrix) zeroize(r, c, rows, col int) {
@@ -364,7 +378,7 @@ func (mat *DOKMatrix) zeroize(r, c, rows, col int) {
 }
 
 //Mul multiplies two matrices and stores the values in this matrix.
-func (mat *DOKMatrix) Mul(a, b SparseMat) {
+func (mat *DOKMatrix) Mul(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("multiply input was found to be nil")
 	}
@@ -385,6 +399,8 @@ func (mat *DOKMatrix) Mul(a, b SparseMat) {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 	mat.mul(a, b)
+
+	return mat
 }
 
 func (mat *DOKMatrix) mul(a, b SparseMat) {
@@ -400,7 +416,7 @@ func (mat *DOKMatrix) mul(a, b SparseMat) {
 }
 
 //Add stores the addition of a and b in this matrix.
-func (mat *DOKMatrix) Add(a, b SparseMat) {
+func (mat *DOKMatrix) Add(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
 	}
@@ -415,6 +431,8 @@ func (mat *DOKMatrix) Add(a, b SparseMat) {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, aCols))
 	}
 	mat.add(a, b)
+
+	return mat
 }
 
 func (mat *DOKMatrix) add(a, b SparseMat) {
@@ -442,7 +460,7 @@ func (mat *DOKMatrix) Column(j int) SparseVector {
 }
 
 //SetColumn sets the values in column j. The values' keys are expected to be row indices.
-func (mat *DOKMatrix) SetColumn(j int, vec SparseVector) {
+func (mat *DOKMatrix) SetColumn(j int, vec SparseVector) SparseMat {
 	mat.checkColBounds(j)
 
 	if mat.rows != vec.Len() {
@@ -462,6 +480,7 @@ func (mat *DOKMatrix) SetColumn(j int, vec SparseVector) {
 		}
 	}
 
+	return mat
 }
 
 //Row returns a map containing the non zero column indices as the keys and it's associated values.
@@ -479,7 +498,7 @@ func (mat *DOKMatrix) Row(i int) SparseVector {
 }
 
 //SetRow sets the values in row i. The values' keys are expected to be column indices.
-func (mat *DOKMatrix) SetRow(i int, vec SparseVector) {
+func (mat *DOKMatrix) SetRow(i int, vec SparseVector) SparseMat {
 	mat.checkRowBounds(i)
 
 	if mat.cols != vec.Len() {
@@ -498,6 +517,8 @@ func (mat *DOKMatrix) SetRow(i int, vec SparseVector) {
 			}
 		}
 	}
+
+	return mat
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.
@@ -550,7 +571,7 @@ func (mat *DOKMatrix) String() string {
 
 //SetMatrix replaces the values of this matrix with the values of from matrix a. The shape of 'a' must be less than or equal mat.
 // If the 'a' shape is less then iOffset and jOffset can be used to place 'a' matrix in a specific location.
-func (mat *DOKMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
+func (mat *DOKMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) SparseMat {
 	if iOffset < 0 || jOffset < 0 {
 		panic("offsets must be positive values [0,+)")
 	}
@@ -564,6 +585,8 @@ func (mat *DOKMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
 			mat.set(i+iOffset, j+jOffset, a.At(i, j))
 		}
 	}
+
+	return mat
 }
 
 //Negate performs a piecewise logical negation.
@@ -579,7 +602,7 @@ func (mat *DOKMatrix) Negate() SparseMat {
 }
 
 //And executes a piecewise logical AND on the two matrices and stores the values in this matrix.
-func (mat *DOKMatrix) And(a, b SparseMat) {
+func (mat *DOKMatrix) And(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("AND input was found to be nil")
 	}
@@ -596,6 +619,8 @@ func (mat *DOKMatrix) And(a, b SparseMat) {
 	}
 
 	mat.and(a, b)
+
+	return mat
 }
 
 func (mat *DOKMatrix) and(a, b SparseMat) {
@@ -609,7 +634,7 @@ func (mat *DOKMatrix) and(a, b SparseMat) {
 }
 
 //Or executes a piecewise logical OR on the two matrices and stores the values in this matrix.
-func (mat *DOKMatrix) Or(a, b SparseMat) {
+func (mat *DOKMatrix) Or(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("OR input was found to be nil")
 	}
@@ -626,6 +651,8 @@ func (mat *DOKMatrix) Or(a, b SparseMat) {
 	}
 
 	mat.or(a, b)
+
+	return mat
 }
 
 func (mat *DOKMatrix) or(a, b SparseMat) {
@@ -637,7 +664,7 @@ func (mat *DOKMatrix) or(a, b SparseMat) {
 }
 
 //XOr executes a piecewise logical XOR on the two matrices and stores the values in this matrix.
-func (mat *DOKMatrix) XOr(a, b SparseMat) {
+func (mat *DOKMatrix) XOr(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
 	}
@@ -653,6 +680,8 @@ func (mat *DOKMatrix) XOr(a, b SparseMat) {
 		panic(fmt.Sprintf("mat shape (%v,%v) does not match expected (%v,%v)", mat.rows, mat.cols, aRows, bCols))
 	}
 	mat.xor(a, b)
+
+	return mat
 }
 
 func (mat *DOKMatrix) xor(a, b SparseMat) {

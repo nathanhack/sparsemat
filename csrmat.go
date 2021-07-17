@@ -154,20 +154,21 @@ func (mat *CSRMatrix) At(i, j int) int {
 	return mat.at(i, j)
 }
 
-func (mat *CSRMatrix) SwapRows(i1, i2 int) {
+func (mat *CSRMatrix) SwapRows(i1, i2 int) SparseMat {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 
 	if i1 == i2 {
-		return
+		return mat
 	}
 
 	tmp := mat.data[i1]
 	mat.data[i1] = mat.data[i2]
 	mat.data[i2] = tmp
+	return mat
 }
 
-func (mat *CSRMatrix) SwapColumns(j1, j2 int) {
+func (mat *CSRMatrix) SwapColumns(j1, j2 int) SparseMat {
 	mat.checkColBounds(j1)
 	mat.checkColBounds(j2)
 
@@ -201,11 +202,13 @@ func (mat *CSRMatrix) SwapColumns(j1, j2 int) {
 		}
 		row[c1] = j1
 	}
+
+	return mat
 }
 
 //AddRows is fast row operation to add two
 // rows and put the result in a destination row.
-func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
+func (mat *CSRMatrix) AddRows(i1, i2, dest int) SparseMat {
 	mat.checkRowBounds(i1)
 	mat.checkRowBounds(i2)
 	mat.checkRowBounds(dest)
@@ -214,6 +217,8 @@ func (mat *CSRMatrix) AddRows(i1, i2, dest int) {
 	bv := mat.data[i2]
 
 	mat.data[dest] = addRows(av, bv)
+
+	return mat
 }
 
 func findIndex(indices []int, value int) int {
@@ -246,11 +251,13 @@ func (mat *CSRMatrix) at(r, c int) int {
 }
 
 //Set sets the value at row index i and column index j to value.
-func (mat *CSRMatrix) Set(i, j, value int) {
+func (mat *CSRMatrix) Set(i, j, value int) SparseMat {
 	mat.checkRowBounds(i)
 	mat.checkColBounds(j)
 
 	mat.set(i, j, value%2)
+
+	return mat
 }
 
 func (mat *CSRMatrix) set(r, c, value int) {
@@ -286,15 +293,17 @@ func (mat *CSRMatrix) T() SparseMat {
 }
 
 //Zeroize take the current matrix sets all values to 0.
-func (mat *CSRMatrix) Zeroize() {
+func (mat *CSRMatrix) Zeroize() SparseMat {
 	mat.data = make([][]int, mat.rows)
 	for i := 0; i < mat.rows; i++ {
 		mat.data[i] = make([]int, 0)
 	}
+
+	return mat
 }
 
 //ZeroizeRange take the current matrix sets values inside the range to zero.
-func (mat *CSRMatrix) ZeroizeRange(i, j, rows, cols int) {
+func (mat *CSRMatrix) ZeroizeRange(i, j, rows, cols int) SparseMat {
 	if i < 0 || j < 0 || rows < 0 || cols < 0 {
 		panic("zeroize must have positive values")
 	}
@@ -303,6 +312,8 @@ func (mat *CSRMatrix) ZeroizeRange(i, j, rows, cols int) {
 	}
 
 	mat.zeroize(i, j, rows, cols)
+
+	return mat
 }
 
 func (mat *CSRMatrix) zeroize(r, c, rows, cols int) {
@@ -314,7 +325,7 @@ func (mat *CSRMatrix) zeroize(r, c, rows, cols int) {
 }
 
 //Mul multiplies two matrices and stores the values in this matrix.
-func (mat *CSRMatrix) Mul(a, b SparseMat) {
+func (mat *CSRMatrix) Mul(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("multiply input was found to be nil")
 	}
@@ -336,6 +347,8 @@ func (mat *CSRMatrix) Mul(a, b SparseMat) {
 	}
 
 	mat.mul(a, b)
+
+	return mat
 }
 
 func (mat *CSRMatrix) mul(a, b SparseMat) {
@@ -351,7 +364,7 @@ func (mat *CSRMatrix) mul(a, b SparseMat) {
 }
 
 //Add stores the addition of a and b in this matrix.
-func (mat *CSRMatrix) Add(a, b SparseMat) {
+func (mat *CSRMatrix) Add(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
 	}
@@ -367,6 +380,8 @@ func (mat *CSRMatrix) Add(a, b SparseMat) {
 	}
 
 	mat.add(a, b)
+
+	return mat
 }
 
 func (mat *CSRMatrix) add(a, b SparseMat) {
@@ -426,7 +441,7 @@ func (mat *CSRMatrix) Column(j int) SparseVector {
 }
 
 //SetColumn sets the values in column j. The values' keys are expected to be row indices.
-func (mat *CSRMatrix) SetColumn(j int, vec SparseVector) {
+func (mat *CSRMatrix) SetColumn(j int, vec SparseVector) SparseMat {
 	mat.checkColBounds(j)
 
 	if mat.rows != vec.Len() {
@@ -437,6 +452,8 @@ func (mat *CSRMatrix) SetColumn(j int, vec SparseVector) {
 		ii := vec.At(i)
 		mat.set(i, j, ii)
 	}
+
+	return mat
 }
 
 //Row returns a map containing the non zero column indices as the keys and it's associated values.
@@ -454,7 +471,7 @@ func (mat *CSRMatrix) Row(i int) SparseVector {
 }
 
 //SetRow sets the values in row i. The values' keys are expected to be column indices.
-func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
+func (mat *CSRMatrix) SetRow(i int, vec SparseVector) SparseMat {
 	mat.checkRowBounds(i)
 
 	if mat.cols != vec.Len() {
@@ -462,6 +479,8 @@ func (mat *CSRMatrix) SetRow(i int, vec SparseVector) {
 	}
 
 	mat.data[i] = vec.NonzeroArray()
+
+	return mat
 }
 
 //Equals return true if the m matrix has the same shape and values as this matrix.
@@ -514,7 +533,7 @@ func (mat CSRMatrix) String() string {
 
 //SetMatrix replaces the values of this matrix with the values of from matrix a. The shape of 'a' must be less than or equal mat.
 // If the 'a' shape is less then iOffset and jOffset can be used to place 'a' matrix in a specific location.
-func (mat *CSRMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
+func (mat *CSRMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) SparseMat {
 	if iOffset < 0 || jOffset < 0 {
 		panic("offsets must be positive values [0,+)")
 	}
@@ -524,6 +543,8 @@ func (mat *CSRMatrix) SetMatrix(a SparseMat, iOffset, jOffset int) {
 	}
 
 	mat.setMatrix(a, iOffset, jOffset)
+
+	return mat
 }
 
 func (mat *CSRMatrix) setMatrix(a SparseMat, rOffset, cOffset int) {
@@ -546,7 +567,7 @@ func (mat *CSRMatrix) Negate() SparseMat {
 }
 
 //And executes a piecewise logical AND on the two matrices and stores the values in this matrix.
-func (mat *CSRMatrix) And(a, b SparseMat) {
+func (mat *CSRMatrix) And(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("AND input was found to be nil")
 	}
@@ -563,6 +584,8 @@ func (mat *CSRMatrix) And(a, b SparseMat) {
 	}
 
 	mat.and(a, b)
+
+	return mat
 }
 
 func (mat *CSRMatrix) and(a, b SparseMat) {
@@ -575,7 +598,7 @@ func (mat *CSRMatrix) and(a, b SparseMat) {
 }
 
 //Or executes a piecewise logical OR on the two matrices and stores the values in this matrix.
-func (mat *CSRMatrix) Or(a, b SparseMat) {
+func (mat *CSRMatrix) Or(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("OR input was found to be nil")
 	}
@@ -592,6 +615,8 @@ func (mat *CSRMatrix) Or(a, b SparseMat) {
 	}
 
 	mat.or(a, b)
+
+	return mat
 }
 
 func (mat *CSRMatrix) or(a, b SparseMat) {
@@ -603,7 +628,7 @@ func (mat *CSRMatrix) or(a, b SparseMat) {
 }
 
 //XOr executes a piecewise logical XOR on the two matrices and stores the values in this matrix.
-func (mat *CSRMatrix) XOr(a, b SparseMat) {
+func (mat *CSRMatrix) XOr(a, b SparseMat) SparseMat {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
 	}
@@ -620,6 +645,8 @@ func (mat *CSRMatrix) XOr(a, b SparseMat) {
 	}
 
 	mat.xor(a, b)
+
+	return mat
 }
 
 func (mat *CSRMatrix) xor(a, b SparseMat) {

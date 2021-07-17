@@ -105,9 +105,11 @@ func (vec *CSRVector) at(j int) int {
 }
 
 //Set sets the value at row index i and column index j to value.
-func (vec *CSRVector) Set(i, value int) {
+func (vec *CSRVector) Set(i, value int) SparseVector {
 	vec.checkBounds(i)
 	vec.set(i, value%2)
+
+	return vec
 }
 
 func (vec *CSRVector) set(j, value int) {
@@ -136,13 +138,15 @@ func (vec *CSRVector) set(j, value int) {
 }
 
 //SetVec replaces the values of this vector with the values of from vector a.
-func (vec *CSRVector) SetVec(a SparseVector, i int) {
+func (vec *CSRVector) SetVec(a SparseVector, i int) SparseVector {
 	vec.checkBounds(i)
 	vec.checkBounds(a.Len() - 1 + i)
 
 	for ii := 0; ii < a.Len(); ii++ {
 		vec.set(ii+i, a.At(ii))
 	}
+
+	return vec
 }
 
 func (vec *CSRVector) Len() int {
@@ -209,7 +213,7 @@ func (vec *CSRVector) Slice(i, length int) SparseVector {
 	return v
 }
 
-func (vec *CSRVector) Add(a, b SparseVector) {
+func (vec *CSRVector) Add(a, b SparseVector) SparseVector {
 	if a == nil || b == nil {
 		panic("addition input was found to be nil")
 	}
@@ -248,6 +252,8 @@ func (vec *CSRVector) Add(a, b SparseVector) {
 	for ; bi < bvLen; bi++ {
 		vec.indices = append(vec.indices, bv[bi])
 	}
+
+	return vec
 }
 
 func (vec *CSRVector) Equals(v SparseVector) bool {
@@ -263,7 +269,7 @@ func (vec *CSRVector) Equals(v SparseVector) bool {
 	return true
 }
 
-func (vec *CSRVector) MulMat(vec2 SparseVector, mat SparseMat) {
+func (vec *CSRVector) MulMat(vec2 SparseVector, mat SparseMat) SparseVector {
 	if vec == nil || vec2 == nil || mat == nil {
 		panic("vector multiply input was found to be nil")
 	}
@@ -279,9 +285,11 @@ func (vec *CSRVector) MulMat(vec2 SparseVector, mat SparseMat) {
 	for c := 0; c < matCols; c++ {
 		vec.set(c, vec2.Dot(mat.Column(c)))
 	}
+
+	return vec
 }
 
-func (vec *CSRVector) MatMul(mat SparseMat, vec2 SparseVector) {
+func (vec *CSRVector) MatMul(mat SparseMat, vec2 SparseVector) SparseVector {
 	if vec == nil || vec2 == nil || mat == nil {
 		panic("vector multiply input was found to be nil")
 	}
@@ -297,9 +305,11 @@ func (vec *CSRVector) MatMul(mat SparseMat, vec2 SparseVector) {
 	for r := 0; r < matRows; r++ {
 		vec.set(r, vec2.Dot(mat.Row(r)))
 	}
+
+	return vec
 }
 
-func (vec *CSRVector) And(a, b SparseVector) {
+func (vec *CSRVector) And(a, b SparseVector) SparseVector {
 	if a == nil || b == nil {
 		panic("AND input was found to be nil")
 	}
@@ -315,9 +325,11 @@ func (vec *CSRVector) And(a, b SparseVector) {
 	for i := 0; i < vec.length; i++ {
 		vec.set(i, a.At(i)&b.At(i))
 	}
+
+	return vec
 }
 
-func (vec *CSRVector) Or(a, b SparseVector) {
+func (vec *CSRVector) Or(a, b SparseVector) SparseVector {
 	if a == nil || b == nil {
 		panic("OR input was found to be nil")
 	}
@@ -333,9 +345,11 @@ func (vec *CSRVector) Or(a, b SparseVector) {
 	for i := 0; i < vec.length; i++ {
 		vec.set(i, a.At(i)|b.At(i))
 	}
+
+	return vec
 }
 
-func (vec *CSRVector) XOr(a, b SparseVector) {
+func (vec *CSRVector) XOr(a, b SparseVector) SparseVector {
 	if a == nil || b == nil {
 		panic("XOR input was found to be nil")
 	}
@@ -351,6 +365,8 @@ func (vec *CSRVector) XOr(a, b SparseVector) {
 	for i := 0; i < vec.length; i++ {
 		vec.set(i, a.At(i)^b.At(i))
 	}
+
+	return vec
 }
 
 func (vec *CSRVector) Negate() SparseVector {
